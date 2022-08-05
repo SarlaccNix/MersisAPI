@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
@@ -44,16 +45,15 @@ public class MapsController : ControllerBase
             payload = reader.ReadToEndAsync().Result;
         }
         dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+        Console.WriteLine("Este es la variable payload" + payloadData);
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
         var filePath = @"F:\Repo\Mersis\Port_City.zip";
         byte[] fileByteArray = System.IO.File.ReadAllBytes(filePath);
         string fileString = Encoding.Default.GetString(fileByteArray);
-
-        var binary = new BsonElement();
         var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
-        var map = new Maps() { MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id, MapFile = fileByteArray };
-        System.IO.File.WriteAllBytes(@"F:\Repo\Mersis\OutputFolder\Port_City_output.zip", (fileByteArray));
+        var map = new Maps() { MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id, MapFile = payloadData.mapFile };
+        // System.IO.File.WriteAllBytes(@"F:\Repo\Mersis\OutputFolder\" + payloadData.mapName + ".zip", payloadData.mapFile);
         try
         {
             defaultMapsDb.InsertOne(map);
