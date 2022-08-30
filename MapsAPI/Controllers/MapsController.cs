@@ -1,10 +1,13 @@
 using System.Diagnostics;
 using System.Text;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using MapsAPI.Models;
 using Newtonsoft.Json;
+using System.Linq;
+using MongoDB.Bson.Serialization;
 
 namespace MapsAPI.Controllers;
 
@@ -12,11 +15,6 @@ namespace MapsAPI.Controllers;
 [Route("[controller]")]
 public class MapsController : ControllerBase
 {
-    private static readonly string[] Summaries = new[]
-    {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
     private readonly ILogger<MapsController> _logger;
 
     public MapsController(ILogger<MapsController> logger)
@@ -24,17 +22,6 @@ public class MapsController : ControllerBase
         _logger = logger;
     }
 
-    // [HttpGet("getMaps")]
-    // public IEnumerable<Maps> Get()
-    // {
-    //     return Enumerable.Range(1, 12).Select(index => new Maps
-    //         {
-    //             Date = DateTime.Now.AddDays(index),
-    //             TemperatureC = Random.Shared.Next(-20, 55),
-    //             Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-    //         })
-    //         .ToArray();
-    // }
 
     [HttpPost("createNewMap")]
     public IEnumerable<Maps> Post()
@@ -44,15 +31,19 @@ public class MapsController : ControllerBase
         {
             payload = reader.ReadToEndAsync().Result;
         }
+
         dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
-        Console.WriteLine("Este es la variable payload" + payloadData);
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
         var filePath = @"F:\Repo\Mersis\Port_City.zip";
         byte[] fileByteArray = System.IO.File.ReadAllBytes(filePath);
         string fileString = Encoding.Default.GetString(fileByteArray);
         var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
-        var map = new Maps() { MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id, MapFile = payloadData.mapFile };
+        var map = new Maps()
+        {
+            MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id,
+            MapFile = payloadData.mapFile
+        };
         // System.IO.File.WriteAllBytes(@"F:\Repo\Mersis\OutputFolder\" + payloadData.mapName + ".zip", payloadData.mapFile);
         try
         {
@@ -73,10 +64,28 @@ public class MapsController : ControllerBase
             })
             .ToArray();
     }
-
-    // [HttpGet("{id}")]
-    // public async Task<ActionResult<Maps>> Get()
+    
+    [HttpGet("getMaps")]
+    public List<MapsList> GetMaps()
+    {
+        var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
+        var database = client.GetDatabase("QH_Maps_Default");
+        var defaultMapsDb = database.GetCollection<MapsList>("QH_Maps");
+        var filter = Builders<MapsList>.Projection;
+        var fields = filter.Exclude(x => x.MapFile);
+        var mapsList = defaultMapsDb.Find(x => true).Project(fields).ToList();
+        return mapsList;
+    }
+    
+    // [HttpGet("getMapById")]
+    // public IEnumerable<Maps> GetMapById()
     // {
-    //     return await 
+    //     var payload = String.Empty;
+    //     using (StreamReader reader = new StreamReader(Request.Body))
+    //     {
+    //         payload = reader.ReadToEndAsync().Result;
+    //     }
+    //
+    //     dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
     // }
 }
