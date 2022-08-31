@@ -66,7 +66,7 @@ public class MapsController : ControllerBase
     }
     
     [HttpGet("getMaps")]
-    public List<MapsList> GetMaps()
+    public List<BsonDocument> GetMaps()
     {
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
