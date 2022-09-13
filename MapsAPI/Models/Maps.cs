@@ -19,5 +19,7 @@ public class Maps
     [BsonElement("last_Edited_Date_Time")] public DateTime Last_Edited_Date_Time { get; set; }
     
     [BsonElement("mapPreviewImage")] public byte[] MapPreview { get; set; } 
+    
+    [BsonElement("mapDescription")] public string MapDescription { get; set; }
 
 }

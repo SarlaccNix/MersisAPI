@@ -66,15 +66,15 @@ public class MapsController : ControllerBase
     }
     
     [HttpGet("getMaps")]
-    public List<BsonDocument> GetMaps()
+    public List<MapsList> GetMaps()
     {
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
         var defaultMapsDb = database.GetCollection<MapsList>("QH_Maps");
         var filter = Builders<MapsList>.Projection;
         var fields = filter.Exclude(x => x.MapFile);
-        var mapsList = defaultMapsDb.Find(x => true).Project(fields).ToList();
-        return mapsList;
+        var mapsList = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
+        return mapsList; 
     }
     
     // [HttpGet("getMapById")]

@@ -18,6 +18,8 @@ public class MapsList
     
     [BsonElement("mapPreviewImage")] public byte[] MapPreview { get; set; } 
     
+    [BsonElement("mapDescription")] public string MapDescription { get; set; }
+    
     [JsonIgnore]
     [BsonElement("mapFile")] public byte[] MapFile { get; set; } = null!;
     
