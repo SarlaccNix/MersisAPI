@@ -67,7 +67,7 @@ public class MapsController : ControllerBase
     
     [HttpGet("getMaps")]
     public List<MapsList> GetMaps()
-    {
+    {   
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
         var defaultMapsDb = database.GetCollection<MapsList>("QH_Maps");
@@ -77,15 +77,26 @@ public class MapsController : ControllerBase
         return mapsList; 
     }
     
-    // [HttpGet("getMapById")]
-    // public IEnumerable<Maps> GetMapById()
-    // {
-    //     var payload = String.Empty;
-    //     using (StreamReader reader = new StreamReader(Request.Body))
-    //     {
-    //         payload = reader.ReadToEndAsync().Result;
-    //     }
-    //
-    //     dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
-    // }
+    [HttpGet("getMapById")]
+    public Task<Maps> GetMapById()
+    {
+        var payload = String.Empty;
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+        var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+        String id = payloadData.id;
+        Console.WriteLine("String id", id, payloadData);
+        var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
+        var database = client.GetDatabase("QH_Maps_Default");
+        var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
+        var map = defaultMapsDb
+            .Find(Builders<Maps>.Filter.Eq("_id", ObjectId.Parse(id)))
+            .FirstOrDefaultAsync();
+        return map;
+    }
+    
+    
+    
 }
