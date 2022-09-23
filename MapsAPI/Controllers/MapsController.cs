@@ -1,13 +1,9 @@
-using System.Diagnostics;
 using System.Text;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
-using MapsAPI.Models;
 using Newtonsoft.Json;
-using System.Linq;
-using MongoDB.Bson.Serialization;
+using MapsAPI.Models;
 
 namespace MapsAPI.Controllers;
 
@@ -64,39 +60,58 @@ public class MapsController : ControllerBase
             })
             .ToArray();
     }
-    
+
     [HttpGet("getMaps")]
-    public List<MapsList> GetMaps()
-    {   
+    public async Task<List<MapsList>> GetMaps()
+    {
+        // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
+        List<MapsList> mapListData;
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
         var defaultMapsDb = database.GetCollection<MapsList>("QH_Maps");
         var filter = Builders<MapsList>.Projection;
         var fields = filter.Exclude(x => x.MapFile);
-        var mapsList = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
-        return mapsList; 
+        mapListData = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
+        // mapsList[Maps] = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
+        return mapListData;
     }
-    
+
     [HttpGet("getMapById")]
-    public Task<Maps> GetMapById()
+    public async Task<OkObjectResult> GetMapById()
     {
         var payload = String.Empty;
         using (StreamReader reader = new StreamReader(Request.Body))
         {
             payload = reader.ReadToEndAsync().Result;
         }
+
         var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
         String id = payloadData.id;
         Console.WriteLine("String id", id, payloadData);
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
         var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
-        var map = defaultMapsDb
+        var map = await defaultMapsDb
             .Find(Builders<Maps>.Filter.Eq("_id", ObjectId.Parse(id)))
             .FirstOrDefaultAsync();
-        return map;
+        var mapResponse = new
+        {   
+            id = map.Id,
+            mapName = map.MapName,
+            creatorId = map.CreatorId,
+            version = map.MapVersion,
+            mapFile = map.MapFile
+        };
+        return new OkObjectResult(mapResponse);
+    }
+
+    [HttpPost("SearchMaps")]
+    public void SearchMaps()
+    {
+        // var payload = String.Empty;
+        // return mapResults;
     }
     
     
-    
+
 }
