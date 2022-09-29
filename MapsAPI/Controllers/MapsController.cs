@@ -1,9 +1,11 @@
 using System.Text;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
 using MapsAPI.Models;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json.Linq;
 
 namespace MapsAPI.Controllers;
@@ -12,6 +14,8 @@ namespace MapsAPI.Controllers;
 [Route("[controller]")]
 public class MapsController : ControllerBase
 {
+    public Dictionary<string, Maps> selectedMaps = new Dictionary<string, Maps>();
+    private FilterDefinitionBuilder<Maps> builder = Builders<Maps>.Filter;
     private readonly ILogger<MapsController> _logger;
 
     public MapsController(ILogger<MapsController> logger)
@@ -39,7 +43,8 @@ public class MapsController : ControllerBase
         var map = new Maps()
         {
             MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id,
-            MapFile = payloadData.mapFile
+            MapFile = payloadData.mapFile,
+            MapVersion = 1
         };
         // System.IO.File.WriteAllBytes(@"F:\Repo\Mersis\OutputFolder\" + payloadData.mapName + ".zip", payloadData.mapFile);
         try
@@ -63,18 +68,41 @@ public class MapsController : ControllerBase
     }
 
     [HttpGet("getMaps")]
-    public async Task<List<MapsList>> GetMaps()
+    public async Task<List<Maps>> GetMaps()
     {
         // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
-        List<MapsList> mapListData;
+        List<Maps> mapListData;
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
-        var defaultMapsDb = database.GetCollection<MapsList>("QH_Maps");
-        var filter = Builders<MapsList>.Projection;
+        var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
+        var filter = Builders<Maps>.Projection;
         var fields = filter.Exclude(x => x.MapFile);
-        mapListData = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
+        mapListData = defaultMapsDb.Find(x => true).Project<Maps>(fields).ToList();
+        selectedMaps = new Dictionary<string, Maps>();
+        foreach (Maps map in mapListData)
+        {
+            selectedMaps[map.Id] = map;
+        }
+
         // mapsList[Maps] = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
         return mapListData;
+    }
+
+    [HttpGet("updateTableField")]
+    public async Task<string> UpdateTableField()
+    {
+        // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
+        // List<Maps> mapListData;
+        var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
+        var database = client.GetDatabase("QH_Maps_Default");
+        var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
+        var update = Builders<Maps>.Update.Unset("Tags");
+        FilterDefinition<Maps> filter = Builders<Maps>.Filter.Empty;
+        await defaultMapsDb.UpdateManyAsync(filter, update);
+        // var fields = filter.Exclude(x => x.MapFile);
+        // mapListData = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
+        // mapsList[Maps] = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
+        return "Updated";
     }
 
     [HttpGet("getMapById")]
@@ -113,35 +141,94 @@ public class MapsController : ControllerBase
         var database = client.GetDatabase("QH_Maps_Default");
         var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
         var payload = String.Empty;
-        var filter = Builders<Maps>.Filter;
-        // string searchText = String.Empty;
-        object? mapResults = null;
+        object response;
+        object error = new
+        {
+            Error = "Error, no match found using the current searching criteria",
+            status = 200
+        };
+        var filter = builder.Empty;
+        List<Maps> mapResults = null;
+
         using (StreamReader reader = new StreamReader(Request.Body))
         {
             payload = reader.ReadToEndAsync().Result;
         }
 
-        var payloadJSON = JsonConvert.DeserializeObject<dynamic>(payload);
-        if (payloadJSON.SearchText != null && payloadJSON.SearchText != "")
+        var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
+
+
+        string searchText = payloadJson.SearchText;
+        string tags = payloadJson.Tags;
+        string userId = payloadJson.UserId;
+        var find = defaultMapsDb.Find(filter);
+        int currentPage = 1, currentPagination = 10;
+
+        if (payloadJson.Pagination != null)
         {
-            string searchText = payloadJSON.SearchText;
-            // filter = filter.Eq("mapName", payloadJSON.SearchText.ToString());
-            mapResults = await defaultMapsDb.Find(Builders<Maps>.Filter.Eq("mapName", searchText))
-                .ToListAsync();
+            currentPagination = payloadJson.Pagination == 0 ? 10 : payloadJson.Pagination;
         }
 
-        var wrappedMapResults = new
+        if (payloadJson.Page != null)
         {
-            maps = mapResults
-        };
-        // return new OkObjectResult(wrappedMapResults);
+            currentPage = payloadJson?.Page == 0 ? 1 : payloadJson.Page;
+        }
+
+        if (!string.IsNullOrEmpty(searchText))
+        {
+            var searchTextFilter = builder.Regex("mapName", new BsonRegularExpression(searchText, "i"));
+            filter &= searchTextFilter;
+        }
+
+        if (!string.IsNullOrEmpty(tags))
+        {
+            var tagsFilter = builder.Regex("tags", new BsonRegularExpression(tags, "i"));
+            filter &= tagsFilter;
+        }
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var userFilter = builder.Regex("creatorId", new(userId, "i"));
+            filter &= userFilter;
+        }
+        // else if (string.IsNullOrEmpty(searchText))
+        // {
+        //     mapResults = defaultMapsDb.Find(x => true).ToList();
+        // }
+
+        mapResults = await defaultMapsDb.Find(filter).Skip((currentPage - 1) * currentPagination)
+            .Limit(currentPagination).ToListAsync();
+
+        selectedMaps = new Dictionary<string, Maps>();
+
         if (mapResults != null)
         {
-            return mapResults;
+            foreach (Maps map in mapResults)
+            {
+                selectedMaps[map.Id] = map;
+            }
         }
-        else
+
+
+        // return new OkObjectResult(wrappedMapResults);
+        if (mapResults != null && mapResults.Any())
         {
-            return "Error, no map found";
+            return response = new
+            {
+                // maps found on search
+                Maps = mapResults,
+                // Amount of maps in the current page
+                Count = mapResults.Count,
+                // Selected page number
+                Page = currentPage,
+                // Selected amount of items per page
+                Pagination = currentPagination,
+                // Amount of matches for current search
+                Hits = await defaultMapsDb.Find(filter).CountDocumentsAsync(),
+                Status = "200"
+            };
         }
+
+        return error;
     }
 }

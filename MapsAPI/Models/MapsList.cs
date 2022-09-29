@@ -7,6 +7,7 @@ namespace MapsAPI.Models;
 public class MapsList
 {
     [BsonId] [BsonRepresentation(BsonType.ObjectId)] public string Id { get; set; }
+    
 
     [BsonElement("mapName")] public string MapName { get; set; } = null!;
 
@@ -20,6 +21,10 @@ public class MapsList
     
     [BsonElement("mapDescription")] public string MapDescription { get; set; }
     
+    [BsonElement("tags")] public string Tags { get; set; }
+    
+    [BsonElement("MapVersion")] public int MapVersion { get; set; }
+
     [JsonIgnore]
     [BsonElement("mapFile")] public byte[] MapFile { get; set; } = null!;
     

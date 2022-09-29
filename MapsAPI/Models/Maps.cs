@@ -15,15 +15,16 @@ public class Maps
 
     [BsonElement("downloaded_qty")] public int Downloads_Quantity { get; set; }
 
-    [BsonElement("creation_Date_Time")] public DateTime Creation_Date_Time { get; set; }
+    [BsonElement("creation_Date_Time")] public DateTime? Creation_Date_Time { get; set; }
 
-    [BsonElement("last_Edited_Date_Time")] public DateTime Last_Edited_Date_Time { get; set; }
+    [BsonElement("last_Edited_Date_Time")] public DateTime? Last_Edited_Date_Time { get; set; }
     
     [BsonElement("mapPreviewImage")] public byte[] MapPreview { get; set; } 
     
     [BsonElement("mapDescription")] public string MapDescription { get; set; }
     
-    [BsonElement("Tags")] public object[] Tags { get; set; }
+    [BsonElement("tags")] public List<string> tags { get; set; }
+
     
     [BsonElement("MapVersion")] public int MapVersion { get; set; }
 }
