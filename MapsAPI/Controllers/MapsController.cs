@@ -14,8 +14,8 @@ namespace MapsAPI.Controllers;
 [Route("[controller]")]
 public class MapsController : ControllerBase
 {
-    public Dictionary<string, Maps> selectedMaps = new Dictionary<string, Maps>();
-    private FilterDefinitionBuilder<Maps> builder = Builders<Maps>.Filter;
+    public Dictionary<string, Map> selectedMaps = new Dictionary<string, Map>();
+    private FilterDefinitionBuilder<Map> builder = Builders<Map>.Filter;
     private readonly ILogger<MapsController> _logger;
 
     public MapsController(ILogger<MapsController> logger)
@@ -25,7 +25,7 @@ public class MapsController : ControllerBase
 
 
     [HttpPost("createNewMap")]
-    public IEnumerable<Maps> Post()
+    public IEnumerable<Map> Post()
     {
         var payload = String.Empty;
         using (StreamReader reader = new StreamReader(Request.Body))
@@ -39,8 +39,8 @@ public class MapsController : ControllerBase
         var filePath = @"F:\Repo\Mersis\Port_City.zip";
         byte[] fileByteArray = System.IO.File.ReadAllBytes(filePath);
         string fileString = Encoding.Default.GetString(fileByteArray);
-        var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
-        var map = new Maps()
+        var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
+        var map = new Map()
         {
             MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id,
             MapFile = payloadData.mapFile,
@@ -57,7 +57,7 @@ public class MapsController : ControllerBase
             throw;
         }
 
-        return Enumerable.Range(1, 1).Select(index => new Maps
+        return Enumerable.Range(1, 1).Select(index => new Map
             {
                 MapName = payloadData.mapName,
                 CreatorId = payloadData.creatorId,
@@ -68,18 +68,18 @@ public class MapsController : ControllerBase
     }
 
     [HttpGet("getMaps")]
-    public async Task<List<Maps>> GetMaps()
+    public async Task<List<Map>> GetMaps()
     {
         // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
-        List<Maps> mapListData;
+        List<Map> mapListData;
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
-        var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
-        var filter = Builders<Maps>.Projection;
+        var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
+        var filter = Builders<Map>.Projection;
         var fields = filter.Exclude(x => x.MapFile);
-        mapListData = defaultMapsDb.Find(x => true).Project<Maps>(fields).ToList();
-        selectedMaps = new Dictionary<string, Maps>();
-        foreach (Maps map in mapListData)
+        mapListData = defaultMapsDb.Find(x => true).Project<Map>(fields).ToList();
+        selectedMaps = new Dictionary<string, Map>();
+        foreach (Map map in mapListData)
         {
             selectedMaps[map.Id] = map;
         }
@@ -95,9 +95,9 @@ public class MapsController : ControllerBase
         // List<Maps> mapListData;
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
-        var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
-        var update = Builders<Maps>.Update.Unset("Tags");
-        FilterDefinition<Maps> filter = Builders<Maps>.Filter.Empty;
+        var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
+        var update = Builders<Map>.Update.Unset("Tags");
+        FilterDefinition<Map> filter = Builders<Map>.Filter.Empty;
         await defaultMapsDb.UpdateManyAsync(filter, update);
         // var fields = filter.Exclude(x => x.MapFile);
         // mapListData = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
@@ -119,9 +119,9 @@ public class MapsController : ControllerBase
         Console.WriteLine("String id", id, payloadData);
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
-        var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
+        var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var map = await defaultMapsDb
-            .Find(Builders<Maps>.Filter.Eq("_id", ObjectId.Parse(id)))
+            .Find(Builders<Map>.Filter.Eq("_id", ObjectId.Parse(id)))
             .FirstOrDefaultAsync();
         var mapResponse = new
         {
@@ -139,7 +139,7 @@ public class MapsController : ControllerBase
     {
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
-        var defaultMapsDb = database.GetCollection<Maps>("QH_Maps");
+        var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var payload = String.Empty;
         object response;
         object error = new
@@ -148,7 +148,7 @@ public class MapsController : ControllerBase
             status = 200
         };
         var filter = builder.Empty;
-        List<Maps> mapResults = null;
+        List<Map> mapResults = null;
 
         using (StreamReader reader = new StreamReader(Request.Body))
         {
@@ -199,11 +199,11 @@ public class MapsController : ControllerBase
         mapResults = await defaultMapsDb.Find(filter).Skip((currentPage - 1) * currentPagination)
             .Limit(currentPagination).ToListAsync();
 
-        selectedMaps = new Dictionary<string, Maps>();
+        selectedMaps = new Dictionary<string, Map>();
 
         if (mapResults != null)
         {
-            foreach (Maps map in mapResults)
+            foreach (Map map in mapResults)
             {
                 selectedMaps[map.Id] = map;
             }

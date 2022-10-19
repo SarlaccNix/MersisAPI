@@ -7,6 +7,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+// app.Urls.Add("http://localhost:7091");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -15,9 +16,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
-app.UseAuthorization();
+app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()
+);
+
+// app.UseAuthorization();
 
 app.MapControllers();
 

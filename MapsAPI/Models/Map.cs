@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace MapsAPI.Models;
 
-public class Maps
+public class Map
 {
     [BsonId] [BsonRepresentation(BsonType.ObjectId)] public string Id { get; set; }
     [BsonElement("mapName")] public string MapName { get; set; } = null!;
@@ -32,5 +32,5 @@ public class Maps
 public class MapList
 {
     [JsonProperty("Maps")]
-    public List<Maps> Maps { get; set; }
+    public List<Map> Maps { get; set; }
 }
