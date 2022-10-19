@@ -1,5 +1,6 @@
 using System.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
@@ -36,11 +37,12 @@ public class MapsController : ControllerBase
         dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
-        var filePath = @"F:\Repo\Mersis\Port_City.zip";
-        byte[] fileByteArray = System.IO.File.ReadAllBytes(filePath);
-        string fileString = Encoding.Default.GetString(fileByteArray);
+        // var filePath = @"F:\Repo\Mersis\Port_City.zip";
+        // byte[] fileByteArray = System.IO.File.ReadAllBytes(filePath);
+        // byte[] fileByteArray = payloadData.mapFile;
+        // string fileString = Encoding.Default.GetString(fileByteArray);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
-        var map = new Map()
+        var map = new Map()    
         {
             MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id,
             MapFile = payloadData.mapFile,
@@ -62,7 +64,7 @@ public class MapsController : ControllerBase
                 MapName = payloadData.mapName,
                 CreatorId = payloadData.creatorId,
                 Id = payloadData.id,
-                MapFile = fileByteArray
+                MapFile = payloadData.mapFile
             })
             .ToArray();
     }
@@ -70,6 +72,7 @@ public class MapsController : ControllerBase
     [HttpGet("getMaps")]
     public async Task<List<Map>> GetMaps()
     {
+        Debug.WriteLine("Get Maps protocol started");
         // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
         List<Map> mapListData;
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
@@ -88,7 +91,7 @@ public class MapsController : ControllerBase
         return mapListData;
     }
 
-    [HttpGet("updateTableField")]
+    [HttpPut("updateTableField")]
     public async Task<string> UpdateTableField()
     {
         // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
@@ -96,7 +99,7 @@ public class MapsController : ControllerBase
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
-        var update = Builders<Map>.Update.Unset("Tags");
+        var update = Builders<Map>.Update.Set("MapVersion", "1");
         FilterDefinition<Map> filter = Builders<Map>.Filter.Empty;
         await defaultMapsDb.UpdateManyAsync(filter, update);
         // var fields = filter.Exclude(x => x.MapFile);
@@ -105,7 +108,7 @@ public class MapsController : ControllerBase
         return "Updated";
     }
 
-    [HttpGet("getMapById")]
+    [HttpPost("getMapById")]
     public async Task<OkObjectResult> GetMapById()
     {
         var payload = String.Empty;
@@ -116,7 +119,6 @@ public class MapsController : ControllerBase
 
         var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
         String id = payloadData.id;
-        Console.WriteLine("String id", id, payloadData);
         var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
         var database = client.GetDatabase("QH_Maps_Default");
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
@@ -127,7 +129,6 @@ public class MapsController : ControllerBase
         {
             id = map.Id,
             mapName = map.MapName,
-            creatorId = map.CreatorId,
             version = map.MapVersion,
             mapFile = map.MapFile
         };
