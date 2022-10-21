@@ -25,7 +25,7 @@ public class Map
     
     [BsonElement("tags")] public List<string> tags { get; set; }
 
-    
+    [BsonElement("privacy")] public  bool privacy { get; set; }
     [BsonElement("MapVersion")] public int MapVersion { get; set; }
 }
 

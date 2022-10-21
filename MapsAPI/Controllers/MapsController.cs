@@ -45,7 +45,7 @@ public class MapsController : ControllerBase
         var map = new Map()    
         {
             MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id,
-            MapFile = payloadData.mapFile,
+            MapFile = payloadData.mapFile, MapDescription = payloadData.description,
             MapVersion = 1
         };
         // System.IO.File.WriteAllBytes(@"F:\Repo\Mersis\OutputFolder\" + payloadData.mapName + ".zip", payloadData.mapFile);
