@@ -16,6 +16,7 @@ namespace MapsAPI.Controllers;
 public class MapsController : ControllerBase
 {
     public Dictionary<string, Map> selectedMaps = new Dictionary<string, Map>();
+    public List<SearchMap> searchedMaps = new List<SearchMap>();
     private FilterDefinitionBuilder<Map> builder = Builders<Map>.Filter;
     private readonly ILogger<MapsController> _logger;
 
@@ -230,13 +231,23 @@ public class MapsController : ControllerBase
         mapResults = await defaultMapsDb.Find(filter).Skip((currentPage - 1) * currentPagination)
             .Limit(currentPagination).ToListAsync();
 
-        selectedMaps = new Dictionary<string, Map>();
+        searchedMaps = new List<SearchMap>();
 
         if (mapResults != null)
         {
             foreach (Map map in mapResults)
             {
-                selectedMaps[map.Id] = map;
+                searchedMaps.Add(new SearchMap()
+                {
+                    Id = map.Id, MapName = map.MapName, CreatorId = map.CreatorId, tags = map.tags,
+                    MapDescription = map.MapDescription,
+                    MapVersion = map.MapVersion,
+                    Favorites = map.Favorites,
+                    Downloads_Quantity = map.Downloads_Quantity,
+                    Creation_Date_Time = map.Creation_Date_Time,
+                    Last_Edited_Date_Time = map.Last_Edited_Date_Time,
+                    MapPreview = map.MapPreview
+                });
             }
         }
 
@@ -247,7 +258,7 @@ public class MapsController : ControllerBase
             return response = new
             {
                 // maps found on search
-                Maps = mapResults,
+                Maps = searchedMaps,
                 // Amount of maps in the current page
                 Count = mapResults.Count,
                 // Selected page number
@@ -256,7 +267,6 @@ public class MapsController : ControllerBase
                 Pagination = currentPagination,
                 // Amount of matches for current search
                 Hits = await defaultMapsDb.Find(filter).CountDocumentsAsync(),
-                Status = "200"
             };
         }
 
