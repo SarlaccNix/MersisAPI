@@ -135,6 +135,37 @@ public class MapsController : ControllerBase
         return new OkObjectResult(mapResponse);
     }
 
+    [HttpDelete("deleteMap")]
+    public async Task<Object> DeleteMap()
+    {
+        var payload = String.Empty;
+        object error = new
+        {
+            Error = "Error, no match found using the current id. No maps were deleted."
+        };
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+        String id = payloadData.id;
+        var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
+        var database = client.GetDatabase("QH_Maps_Default");
+        var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
+        var map =  defaultMapsDb
+            .DeleteOne(Builders<Map>.Filter.Eq("_id", ObjectId.Parse(id)));
+        if (map.DeletedCount == 0)
+        {
+            return error;
+        }
+        var deleteResponse = new
+            {
+                success = $"Map with id {id} deleted."
+            };
+            return new OkObjectResult(deleteResponse);
+    }
+
     [HttpPost("SearchMaps")]
     public async Task<Object> SearchMaps()
     {
@@ -145,8 +176,7 @@ public class MapsController : ControllerBase
         object response;
         object error = new
         {
-            Error = "Error, no match found using the current searching criteria",
-            status = 200
+            Error = "Error, no match found using the current searching criteria"
         };
         var filter = builder.Empty;
         List<Map> mapResults = null;
