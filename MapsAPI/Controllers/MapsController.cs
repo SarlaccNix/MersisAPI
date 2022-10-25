@@ -92,6 +92,42 @@ public class MapsController : ControllerBase
         return mapListData;
     }
 
+    [HttpPut("updateMap")]
+    public async Task<string> UpdateMap()
+    {
+        var client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
+        var database = client.GetDatabase("QH_Maps_Default");
+        var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
+        var payload = String.Empty;
+        string response;
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+        var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+        string mapToUpdate = payloadData.id;
+        string newMapFile = payloadData.mapFile;
+        if (!string.IsNullOrEmpty(mapToUpdate) && !string.IsNullOrEmpty(newMapFile)){
+            FilterDefinition<Map> filter = Builders<Map>.Filter.Eq("_id", ObjectId.Parse(mapToUpdate));
+            var update = Builders<Map>.Update.Set("mapFile", newMapFile);
+            var fetchUpdate = await defaultMapsDb.UpdateOneAsync(filter, update);
+            if (fetchUpdate.MatchedCount == 1)
+            {
+                response = $"Map file for id: {mapToUpdate} updated.";
+            }
+            else
+            {
+                response = "Id does not match any file in the database.";
+            }
+        }
+        else 
+        {
+            response= "Map id and/or map file missing.";
+        }
+
+        return response;
+    }
+
     [HttpPut("updateTableField")]
     public async Task<string> UpdateTableField()
     {
