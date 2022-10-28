@@ -10,17 +10,17 @@ public class Character
 
     [BsonElement("characterGender")] public int characterGender { get; set; }
     
-    [BsonElement("primaryColor")] public RGBa primaryColor { get; set; }
+    [BsonElement("primaryColor")] public object primaryColor { get; set; }
 
-    [BsonElement("secondaryColor")] public RGBa secondaryColor { get; set; }
+    [BsonElement("secondaryColor")] public object secondaryColor { get; set; }
 
-    [BsonElement("hairColor")] public RGBa hairColor { get; set; }
+    [BsonElement("hairColor")] public object hairColor { get; set; }
 
-    [BsonElement("skinColor")] public RGBa skinColor { get; set; } 
+    [BsonElement("skinColor")] public object skinColor { get; set; } 
     
-    [BsonElement("stubbleColor")] public RGBa stubbleColor { get; set; }
+    [BsonElement("stubbleColor")] public object stubbleColor { get; set; }
     
-    [BsonElement("scarColor")] public  RGBa scarColor { get; set; }
+    [BsonElement("scarColor")] public  object scarColor { get; set; }
     
     [BsonElement("hair")] public string hair { get; set; }
     
@@ -82,23 +82,23 @@ public class Character
     
     [BsonElement("idleAnimationController")] public string idleAnimationController { get; set; }
     
-    [BsonElement("figureBaseScale")] public XYZ figureBaseScale { get; set; }
+    [BsonElement("figureBaseScale")] public object figureBaseScale { get; set; }
     
-    [BsonElement("figureScale")] public XYZ figureScale { get; set; }
+    [BsonElement("figureScale")] public object figureScale { get; set; }
     
-    [BsonElement("eyesColor")] public RGBa eyesColor { get; set; }
+    [BsonElement("eyesColor")] public object eyesColor { get; set; }
     
-    [BsonElement("bodyArtColor")] public RGBa bodyArtColor { get; set; }
+    [BsonElement("bodyArtColor")] public object bodyArtColor { get; set; }
     
-    [BsonElement("leatherPrimaryColor")] public RGBa leatherPrimaryColor { get; set; }
+    [BsonElement("leatherPrimaryColor")] public object leatherPrimaryColor { get; set; }
     
-    [BsonElement("leatherSecondaryColor")] public RGBa leatherSecondaryColor { get; set; }
+    [BsonElement("leatherSecondaryColor")] public object leatherSecondaryColor { get; set; }
     
-    [BsonElement("metalPrimaryColor")] public RGBa metalPrimaryColor { get; set; }
+    [BsonElement("metalPrimaryColor")] public object metalPrimaryColor { get; set; }
     
-    [BsonElement("metalSecondaryColor")] public RGBa metalSecondaryColor { get; set; }
+    [BsonElement("metalSecondaryColor")] public object metalSecondaryColor { get; set; }
     
-    [BsonElement("metalDarkColor")] public RGBa metalDarkColor { get; set; }
+    [BsonElement("metalDarkColor")] public object metalDarkColor { get; set; }
 }
 
 public class CharacterList
@@ -109,17 +109,17 @@ public class CharacterList
 
 public class RGBa
 {
-    public double r = 0;
-    public double g = 0;
-    public double b = 0;
-    public double a = 0;
+    public double r;
+    public double g;
+    public double b;
+    public double a;
 }
 
 public class XYZ
 {
-    public double x = 0.0;
-    public double y = 0.0;
-    public double z = 0.0;
+    public double x;
+    public double y;
+    public double z;
 }
 
 public class CharacterData
