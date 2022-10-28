@@ -1,14 +1,9 @@
-using System.Text;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
 using MapsAPI.Models;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Newtonsoft.Json.Linq;
 
 namespace MapsAPI.Controllers;
 
@@ -31,7 +26,7 @@ public class MapsController : ControllerBase
 
     [HttpPost("createNewMap")]
     public IEnumerable<Map> Post()
-    {
+    {   
         var payload = String.Empty;
         using (StreamReader reader = new StreamReader(Request.Body))
         {
@@ -40,18 +35,13 @@ public class MapsController : ControllerBase
 
         dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
         var database = client.GetDatabase("QH_Maps_Default");
-        // var filePath = @"F:\Repo\Mersis\Port_City.zip";
-        // byte[] fileByteArray = System.IO.File.ReadAllBytes(filePath);
-        // byte[] fileByteArray = payloadData.mapFile;
-        // string fileString = Encoding.Default.GetString(fileByteArray);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var map = new Map()    
         {
             MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id,
             MapFile = payloadData.mapFile, MapDescription = payloadData.description,
-            MapVersion = 1
+            MapVersion = 1, Creation_Date_Time = DateTime.Now, Last_Edited_Date_Time = DateTime.Now
         };
-        // System.IO.File.WriteAllBytes(@"F:\Repo\Mersis\OutputFolder\" + payloadData.mapName + ".zip", payloadData.mapFile);
         try
         {
             defaultMapsDb.InsertOne(map);
@@ -132,16 +122,17 @@ public class MapsController : ControllerBase
             var fetchUpdate = await defaultMapsDb.UpdateOneAsync(filter, update);
             if (fetchUpdate.MatchedCount == 1)
             {
-                response = $"Map file for id: {mapToUpdate} updated.";
+                Builders<Map>.Update.Set("last_Edited_Date_Time", DateTime.Now);
+                response = $"Map file for ID: {mapToUpdate} updated.";
             }
             else
             {
-                response = "Id does not match any file in the database.";
+                response = "ID does not match any file in the database.";
             }
         }
         else 
         {
-            response= "Map id and/or map file missing.";
+            response= "Map ID and/or map file missing.";
         }
 
         return response;
@@ -190,34 +181,34 @@ public class MapsController : ControllerBase
     }
 
     [HttpDelete("deleteMap")]
-    public async Task<Object> DeleteMap()
-    {
-        var payload = String.Empty;
-        object error = new
-        {
-            Error = "Error, no match found using the current id. No maps were deleted."
-        };
-        using (StreamReader reader = new StreamReader(Request.Body))
-        {
-            payload = reader.ReadToEndAsync().Result;
-        }
-
-        var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
-        String id = payloadData.id;
-        var database = client.GetDatabase("QH_Maps_Default");
-        var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
-        var map =  defaultMapsDb
-            .DeleteOne(Builders<Map>.Filter.Eq("_id", ObjectId.Parse(id)));
-        if (map.DeletedCount == 0)
-        {
-            return error;
-        }
-        var deleteResponse = new
-            {
-                success = $"Map with id {id} deleted."
-            };
-            return new OkObjectResult(deleteResponse);
-    }
+         public async Task<Object> DeleteMap()
+         {
+             var payload = String.Empty;
+             object error = new
+             {
+                 Error = "Error, no match found using the current id. No maps were deleted."
+             };
+             using (StreamReader reader = new StreamReader(Request.Body))
+             {
+                 payload = reader.ReadToEndAsync().Result;
+             }
+     
+             var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+             String id = payloadData.id;
+             var database = client.GetDatabase("QH_Maps_Default");
+             var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
+             var map =  defaultMapsDb
+                 .DeleteOne(Builders<Map>.Filter.Eq("_id", ObjectId.Parse(id)));
+             if (map.DeletedCount == 0)
+             {
+                 return error;
+             }
+             var deleteResponse = new
+                 {
+                     success = $"Map with id {id} deleted."
+                 };
+                 return new OkObjectResult(deleteResponse);
+         }
 
     [HttpPost("SearchMaps")]
     public async Task<Object> SearchMaps()
@@ -269,13 +260,9 @@ public class MapsController : ControllerBase
 
         if (!string.IsNullOrEmpty(userId))
         {
-            var userFilter = builder.Regex("creatorId", new(userId, "i"));
+            var userFilter = builder.Regex("creatorName", new(userId, "i"));
             filter &= userFilter;
         }
-        // else if (string.IsNullOrEmpty(searchText))
-        // {
-        //     mapResults = defaultMapsDb.Find(x => true).ToList();
-        // }
 
         mapResults = await defaultMapsDb.Find(filter).Skip((currentPage - 1) * currentPagination)
             .Limit(currentPagination).ToListAsync();
@@ -288,7 +275,9 @@ public class MapsController : ControllerBase
             {
                 searchedMaps.Add(new SearchMap()
                 {
-                    Id = map.Id, MapName = map.MapName, CreatorId = map.CreatorId, tags = map.tags,
+                    Id = map.Id, MapName = map.MapName,
+                    CreatorId = map.CreatorId,
+                    tags = map.tags,
                     MapDescription = map.MapDescription,
                     MapVersion = map.MapVersion,
                     Favorites = map.Favorites,
