@@ -70,6 +70,8 @@ public class Character
     
     [BsonElement("kneeAttachmentRight")] public string kneeAttachmentRight { get; set; }
     
+    [BsonElement("kneeAttachmentLeft")] public string kneeAttachmentLeft { get; set; }
+    
     [BsonElement("shoulderAttachmentRight")] public string shoulderAttachmentRight { get; set; }
     
     [BsonElement("shoulderAttachmentLeft")] public string shoulderAttachmentLeft { get; set; }
