@@ -9,6 +9,7 @@ public class Map
     [BsonId] [BsonRepresentation(BsonType.ObjectId)] public string Id { get; set; }
     [BsonElement("mapName")] public string MapName { get; set; } = null!;
     [BsonElement("creatorId")] public string CreatorId { get; set; }
+    [BsonElement("creatorName")] public string CreatorName { get; set; }
     [BsonElement("mapFile")] public byte[] MapFile { get; set; } = null!;
 
     [BsonElement("favorites")] public int Favorites { get; set; }

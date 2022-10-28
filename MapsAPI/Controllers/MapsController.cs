@@ -25,23 +25,26 @@ public class MapsController : ControllerBase
 
 
     [HttpPost("createNewMap")]
-    public IEnumerable<Map> Post()
-    {   
+    public async Task<OkObjectResult> Post()
+    {
+        Map uploadedMap;
+        byte[] emptyByte = null;
         var payload = String.Empty;
         using (StreamReader reader = new StreamReader(Request.Body))
         {
             payload = reader.ReadToEndAsync().Result;
         }
-
+        
         dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
         var database = client.GetDatabase("QH_Maps_Default");
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var map = new Map()    
         {
-            MapName = payloadData.mapName, CreatorId = payloadData.creatorId, Id = payloadData.id,
+            MapName = payloadData.mapName, CreatorId = payloadData.creatorId, CreatorName = payloadData.creatorName,Id = payloadData.id,
             MapFile = payloadData.mapFile, MapDescription = payloadData.description,
             MapVersion = 1, Creation_Date_Time = DateTime.Now, Last_Edited_Date_Time = DateTime.Now
         };
+        
         try
         {
             defaultMapsDb.InsertOne(map);
@@ -51,15 +54,22 @@ public class MapsController : ControllerBase
             Console.WriteLine("Error: " + e);
             throw;
         }
-
-        return Enumerable.Range(1, 1).Select(index => new Map
-            {
-                MapName = payloadData.mapName,
-                CreatorId = payloadData.creatorId,
-                Id = payloadData.id,
-                MapFile = payloadData.mapFile
-            })
-            .ToArray();
+        uploadedMap = await defaultMapsDb.Find(Builders<Map>.Filter.Eq("_id", ObjectId.Parse(map.Id)))
+            .FirstOrDefaultAsync();
+        
+        var mapResponse = new
+        {
+            id = uploadedMap.Id,
+            mapName = uploadedMap.MapName,
+            mapFile = emptyByte,
+            creatorId = uploadedMap.CreatorId,
+            creatorName = uploadedMap.CreatorName,
+            creation_Date_Time = uploadedMap.Creation_Date_Time,
+            last_Edited_Date_Time = uploadedMap.Last_Edited_Date_Time,
+            favorites = uploadedMap.Favorites,
+            downloaded_quantity = uploadedMap.Downloads_Quantity
+        };
+        return new OkObjectResult(mapResponse);
     }
 
     [HttpGet("getMaps")]
