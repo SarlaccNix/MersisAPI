@@ -14,6 +14,8 @@ public class CustomObjectData
     [BsonElement("creatorId")] public string creatorId { get; set; }
     
     [BsonElement("creatorName")] public string creatorName { get; set; }
+    
+    [BsonElement("tags")] public List<string> tags { get; set; }
 
     [BsonElement("privacy")] public bool privacy { get; set; }
     
@@ -30,7 +32,7 @@ public class CustomObject
     
     [BsonElement("prefabId")] public string prefabId { get; set; }
     
-    [BsonElement("keywords")] public string[] keywords { get; set; }
+    [BsonElement("keywords")] public List<string> keywords { get; set; }
     
     [BsonElement("scale")] public XYZ scale { get; set; }
 

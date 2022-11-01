@@ -200,13 +200,13 @@ public class CharactersController : ControllerBase
 
         return error;
     }
-    [HttpDelete("deleteMap")]
-    public async Task<Object> DeleteMap()
+    [HttpDelete("characters")]
+    public async Task<Object> DeleteCharacter()
     {
         var payload = String.Empty;
         object error = new
         {
-            Error = "Error, no match found using the current id. No maps were deleted."
+            Error = "Error, no match found using the current id. No characters were deleted."
         };
         using (StreamReader reader = new StreamReader(Request.Body))
         {
@@ -215,6 +215,10 @@ public class CharactersController : ControllerBase
 
         var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
         String id = payloadData.id;
+        if (id.Equals(""))
+        {
+            return error;
+        }
         var database = client.GetDatabase("QuestHaven");
         var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
         var characterDelete =  charactersCollection

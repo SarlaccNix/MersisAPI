@@ -39,6 +39,7 @@ public class CustomObjectsController : ControllerBase
         customObjectData.id = customObjectData.customObject.prefabId;
         customObjectData.creation_Date_Time = DateTime.Now;
         customObjectData.last_Edited_Date_Time = DateTime.Now;
+        customObjectData.tags = customObjectData.customObject.keywords;
         try
         {
             charactersCollection.InsertOne(customObjectData);
@@ -51,8 +52,8 @@ public class CustomObjectsController : ControllerBase
         }
         
     }
-    [HttpPost("getCustomObjects")]
-    public async Task<OkObjectResult> getCustomObject()
+    [HttpPost("getCustomObjectById")]
+    public async Task<OkObjectResult> getCustomObjectById()
     {
         var payload = String.Empty;
         object? response;
@@ -98,105 +99,109 @@ public class CustomObjectsController : ControllerBase
     // {
     //     yield break;
     // }
-    // [HttpPost("searchCustomObjects")]
-    // public async Task<Object> SearchCustomObjects()
-    // {
-    //     var database = client.GetDatabase("QuestHaven");
-    //     var customObjectCollection = database.GetCollection<CustomObjectData>("QH_CustomObjects");
-    //     var payload = String.Empty;
-    //     List<CustomObjectData> charactersResult = null;
-    //     object response;
-    //     object error = new
-    //     {
-    //         Error = "Error, no match found using the current searching criteria"
-    //     };
-    //     var filter = builder.Empty;
-    //
-    //     using (StreamReader reader = new StreamReader(Request.Body))
-    //     {
-    //         payload = reader.ReadToEndAsync().Result;
-    //     }
-    //
-    //     var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
-    //     string searchText = payloadJson.SearchText;
-    //     string tags = payloadJson.Tags;
-    //     string creatorName = payloadJson.creatorName;
-    //     string creatorId = payloadJson.creatorId;
-    //     var find = customObjectCollection.Find(filter);
-    //     int currentPage = 1, currentPagination = 10;
-    //
-    //     if (payloadJson.Pagination != null)
-    //     {
-    //         currentPagination = payloadJson.Pagination == 0 ? 10 : payloadJson.Pagination;
-    //     }
-    //
-    //     if (payloadJson.Page != null)
-    //     {
-    //         currentPage = payloadJson?.Page == 0 ? 1 : payloadJson.Page;
-    //     }
-    //
-    //     if (!string.IsNullOrEmpty(searchText))
-    //     {
-    //         var searchTextFilter = builder.Regex("name", new BsonRegularExpression(searchText, "i"));
-    //         filter &= searchTextFilter;
-    //     }
-    //
-    //     if (!string.IsNullOrEmpty(tags))
-    //     {
-    //         var tagsFilter = builder.Regex("tags", new BsonRegularExpression(tags, "i"));
-    //         filter &= tagsFilter;
-    //     }
-    //
-    //     if (!string.IsNullOrEmpty(creatorName))
-    //     {
-    //         var userFilter = builder.Regex("creatorName", new(creatorName, "i"));
-    //         filter &= userFilter;
-    //     }
-    //
-    //     charactersResult = await customObjectCollection.Find(filter).Skip((currentPage - 1) * currentPagination)
-    //         .Limit(currentPagination).ToListAsync();
-    //
-    //     customObjectCollection = new List<CustomObject>();
-    //
-    //     if (charactersResult != null)
-    //     {
-    //         foreach (CustomObject character in charactersResult)
-    //         {
-    //             searchedCharacters.Add(new CustomObject()
-    //             {
-    //                 id = character.id,
-    //                 name = character.name,
-    //                 CreatorId = character.CreatorId,
-    //                 CreatorName = character.CreatorName,
-    //                 tags = character.tags,
-    //                 Downloads_Quantity = character.Downloads_Quantity,
-    //                 Creation_Date_Time = character.Creation_Date_Time,
-    //                 Last_Edited_Date_Time = character.Last_Edited_Date_Time,
-    //                 Character = character.Character
-    //             });
-    //         }
-    //     }
-    //
-    //     
-    //     if (charactersResult != null && charactersResult.Any())
-    //     {
-    //         return response = new
-    //         {
-    //             // characters found on search
-    //             characters = searchedCharacters,
-    //             // Amount of characters in the current page
-    //             Count = charactersResult.Count,
-    //             // Selected page number
-    //             Page = currentPage,
-    //             // Selected amount of items per page
-    //             Pagination = currentPagination,
-    //             // Amount of matches for current search
-    //             Hits = await charactersCollection.Find(filter).CountDocumentsAsync(),
-    //         };
-    //     }
-    //
-    //     return error;
-    // }
+    
+    [HttpPost("searchCustomObjects")]
+    public async Task<Object> SearchCustomObjects()
+    {
+        var database = client.GetDatabase("QuestHaven");
+        var customObjectCollection = database.GetCollection<CustomObjectData>("QH_CustomObjects");
+        var payload = String.Empty;
+        List<CustomObjectData> customObjectsResult = null;
+        object response;
+        object error = new
+        {
+            Error = "Error, no match found using the current searching criteria"
+        };
+        var filter = builder.Empty;
+    
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+    
+        var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
+        string searchText = payloadJson.SearchText;
+        // List<string> tags = JsonConvert.DeserializeObject<dynamic>(payloadJson.Tags);
+        string creatorName = payloadJson.creatorName;
+        string creatorId = payloadJson.creatorId;
+        var find = customObjectCollection.Find(filter);
+        int currentPage = 1, currentPagination = 10;
+    
+        if (payloadJson.Pagination != null)
+        {
+            currentPagination = payloadJson.Pagination == 0 ? 10 : payloadJson.Pagination;
+        }
+    
+        if (payloadJson.Page != null)
+        {
+            currentPage = payloadJson?.Page == 0 ? 1 : payloadJson.Page;
+        }
+    
+        if (!string.IsNullOrEmpty(searchText))
+        {
+            var searchTextFilter = builder.Regex("name", new BsonRegularExpression(searchText, "i"));
+            filter &= searchTextFilter;
+        }
+        
+        // if (tags.Count > 0)
+        // {
+        //     foreach (string tag in tags)
+        //     {
+        //         var tagsFilter = builder.Regex("tags", new BsonRegularExpression(tag, "i"));
+        //         filter &= tagsFilter;
+        //     }
+        // }
+    
+        if (!string.IsNullOrEmpty(creatorName))
+        {
+            var userFilter = builder.Regex("creatorName", new(creatorName, "i"));
+            filter &= userFilter;
+        }
+    
+        customObjectsResult = await customObjectCollection.Find(filter).Skip((currentPage - 1) * currentPagination)
+            .Limit(currentPagination).ToListAsync();
+    
+        searchedCustomObjects = new List<CustomObjectData>();
+    
+        if (customObjectsResult != null)
+        {
+            foreach (CustomObjectData customObject in customObjectsResult)
+            {
+                searchedCustomObjects.Add(new CustomObjectData()
+                {
+                    id = customObject.id,
+                    name = customObject.name,
+                    creatorId = customObject.creatorId,
+                    creatorName = customObject.creatorName,
+                    downloads_quantity =  customObject.downloads_quantity,
+                    creation_Date_Time = customObject.creation_Date_Time,
+                    last_Edited_Date_Time = customObject.last_Edited_Date_Time,
+                    customObject = customObject.customObject,
+                    tags = customObject.tags
+                });
+            }
+        }
+    
+        
+        if (customObjectsResult != null && customObjectsResult.Any())
+        {
+            return response = new
+            {
+                // custom objects found on search
+                customObjects = searchedCustomObjects,
+                // Amount of custom objects in the current page
+                Count = customObjectsResult.Count,
+                // Selected page number
+                Page = currentPage,
+                // Selected amount of items per page
+                Pagination = currentPagination,
+                // Amount of matches for current search
+                Hits = await customObjectCollection.Find(filter).CountDocumentsAsync(),
+            };
+        }
+    
+        return error;
+    }
     
     [HttpDelete("customObjects")]
     public async Task<Object> DeleteCustomObject()
