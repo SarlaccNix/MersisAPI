@@ -15,7 +15,10 @@ public class MapsController : ControllerBase
     public List<SearchMap> searchedMaps = new List<SearchMap>();
     private FilterDefinitionBuilder<Map> builder = Builders<Map>.Filter;
     private readonly ILogger<MapsController> _logger;
-    MongoClient client = new MongoClient("mongodb+srv://whiteRabbit:MaudioTest@cluster0.u4jq0.mongodb.net/test");
+
+    private MongoClient client =
+        new MongoClient(
+            "mongodb+srv://doadmin:fuzs536H0R9P124y@db-mongodb-nyc1-91572-de834d8c.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
 
 
     public MapsController(ILogger<MapsController> logger)
@@ -36,7 +39,7 @@ public class MapsController : ControllerBase
         }
         
         dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
-        var database = client.GetDatabase("QH_Maps_Default");
+        var database = client.GetDatabase("QuestHaven");
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var map = new Map()    
         {
