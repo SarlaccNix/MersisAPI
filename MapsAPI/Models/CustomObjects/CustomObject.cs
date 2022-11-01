@@ -15,9 +15,9 @@ public class CustomObjectData
     
     [BsonElement("creatorName")] public string creatorName { get; set; }
 
-    [BsonElement("privacy")] public  bool privacy { get; set; }
+    [BsonElement("privacy")] public bool privacy { get; set; }
     
-    [BsonElement("downloads_quantity")] public  bool downloads_quantity { get; set; }
+    [BsonElement("downloads_quantity")] public int downloads_quantity { get; set; }
     [BsonElement("last_Edited_Date_Time")] public  DateTime last_Edited_Date_Time { get; set; }
     [BsonElement("creation_Date_Time")] public DateTime creation_Date_Time { get; set; }
     

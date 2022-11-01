@@ -36,6 +36,7 @@ public class CustomObjectsController : ControllerBase
             return "Error: missing JSON data";
         } 
         customObjectData.name = customObjectData.customObject.prefabName;
+        customObjectData.id = customObjectData.customObject.prefabId;
         customObjectData.creation_Date_Time = DateTime.Now;
         customObjectData.last_Edited_Date_Time = DateTime.Now;
         try
