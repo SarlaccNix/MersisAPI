@@ -30,7 +30,7 @@ public class CustomObject
     
     [BsonElement("prefabId")] public string prefabId { get; set; }
     
-    [BsonElement("keywords")] public int keywords { get; set; }
+    [BsonElement("keywords")] public string[] keywords { get; set; }
     
     [BsonElement("scale")] public XYZ scale { get; set; }
 
