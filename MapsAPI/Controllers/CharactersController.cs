@@ -122,7 +122,7 @@ public class CharactersController : ControllerBase
 
         var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
         string searchText = payloadJson.SearchText;
-        string tags = payloadJson.Tags;
+        dynamic tags = payloadJson.Tags;
         string creatorName = payloadJson.creatorName;
         string creatorId = payloadJson.creatorId;
         var find = charactersCollection.Find(filter);
@@ -144,10 +144,14 @@ public class CharactersController : ControllerBase
             filter &= searchTextFilter;
         }
 
-        if (!string.IsNullOrEmpty(tags))
+        if (tags != null)
         {
-            var tagsFilter = builder.Regex("tags", new BsonRegularExpression(tags, "i"));
-            filter &= tagsFilter;
+            
+            foreach (string tag in tags)
+            {
+                var tagsFilter = builder.Regex("tags", new BsonRegularExpression( tag, "i"));
+                filter &= tagsFilter;
+            }
         }
 
         if (!string.IsNullOrEmpty(creatorName))
