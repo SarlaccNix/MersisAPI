@@ -1,8 +1,10 @@
-﻿using MapsAPI.Models.CustomObjects;
+﻿using System.Diagnostics;
+using MapsAPI.Models.CustomObjects;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace MapsAPI.Controllers;
 
@@ -99,7 +101,7 @@ public class CustomObjectsController : ControllerBase
     // {
     //     yield break;
     // }
-    
+
     [HttpPost("searchCustomObjects")]
     public async Task<Object> SearchCustomObjects()
     {
@@ -113,44 +115,46 @@ public class CustomObjectsController : ControllerBase
             Error = "Error, no match found using the current searching criteria"
         };
         var filter = builder.Empty;
-    
+
         using (StreamReader reader = new StreamReader(Request.Body))
         {
             payload = reader.ReadToEndAsync().Result;
         }
-    
+
         var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
         string searchText = payloadJson.SearchText;
         // List<string> tags = JsonConvert.DeserializeObject<dynamic>(payloadJson.Tags);
         string creatorName = payloadJson.creatorName;
         string creatorId = payloadJson.creatorId;
+        dynamic tags = payloadJson.Tags;
         var find = customObjectCollection.Find(filter);
         int currentPage = 1, currentPagination = 10;
-    
+
         if (payloadJson.Pagination != null)
         {
             currentPagination = payloadJson.Pagination == 0 ? 10 : payloadJson.Pagination;
         }
-    
+
         if (payloadJson.Page != null)
         {
             currentPage = payloadJson?.Page == 0 ? 1 : payloadJson.Page;
         }
-    
+
         if (!string.IsNullOrEmpty(searchText))
         {
             var searchTextFilter = builder.Regex("name", new BsonRegularExpression(searchText, "i"));
             filter &= searchTextFilter;
         }
-        
-        // if (tags.Count > 0)
-        // {
-        //     foreach (string tag in tags)
-        //     {
-        //         var tagsFilter = builder.Regex("tags", new BsonRegularExpression(tag, "i"));
-        //         filter &= tagsFilter;
-        //     }
-        // }
+
+        if (tags != null)
+        {
+            
+            foreach (string tag in tags)
+            {
+                var tagsFilter = builder.Regex("tags", new BsonRegularExpression( tag, "i"));
+                filter &= tagsFilter;
+            }
+        }
     
         if (!string.IsNullOrEmpty(creatorName))
         {
