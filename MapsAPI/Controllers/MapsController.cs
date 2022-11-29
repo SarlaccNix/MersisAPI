@@ -15,7 +15,7 @@ public class MapsController : ControllerBase
     public List<SearchMap> searchedMaps = new List<SearchMap>();
     private FilterDefinitionBuilder<Map> builder = Builders<Map>.Filter;
     private readonly ILogger<MapsController> _logger;
-
+    private string databaseName = "QuestHaven";
     private MongoClient client =
         new MongoClient(
             "mongodb+srv://doadmin:fuzs536H0R9P124y@db-mongodb-nyc1-91572-de834d8c.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
@@ -39,7 +39,7 @@ public class MapsController : ControllerBase
         }
         
         dynamic payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var map = new Map()    
         {
@@ -81,7 +81,7 @@ public class MapsController : ControllerBase
         Debug.WriteLine("Get Maps protocol started");
         // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
         List<Map> mapListData;
-        var database = client.GetDatabase("QH_Maps_Default");
+        var database = client.GetDatabase(databaseName);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var filter = Builders<Map>.Projection;
         var fields = filter.Exclude(x => x.MapFile);
@@ -101,7 +101,7 @@ public class MapsController : ControllerBase
     [HttpPut("updateMap")]
     public async Task<string> UpdateMap()
     {
-        var database = client.GetDatabase("QH_Maps_Default");
+        var database = client.GetDatabase(databaseName);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var payload = String.Empty;
         string response;
@@ -156,7 +156,7 @@ public class MapsController : ControllerBase
     {
         // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
         // List<Maps> mapListData;
-        var database = client.GetDatabase("QH_Maps_Default");
+        var database = client.GetDatabase(databaseName);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var update = Builders<Map>.Update.Set("MapVersion", "1");
         FilterDefinition<Map> filter = Builders<Map>.Filter.Empty;
@@ -178,7 +178,7 @@ public class MapsController : ControllerBase
 
         var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
         String id = payloadData.id;
-        var database = client.GetDatabase("QH_Maps_Default");
+        var database = client.GetDatabase(databaseName);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var map = await defaultMapsDb
             .Find(Builders<Map>.Filter.Eq("_id", ObjectId.Parse(id)))
@@ -208,7 +208,7 @@ public class MapsController : ControllerBase
      
              var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
              String id = payloadData.id;
-             var database = client.GetDatabase("QH_Maps_Default");
+             var database = client.GetDatabase(databaseName);
              var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
              var map =  defaultMapsDb
                  .DeleteOne(Builders<Map>.Filter.Eq("_id", ObjectId.Parse(id)));
@@ -226,7 +226,7 @@ public class MapsController : ControllerBase
     [HttpPost("SearchMaps")]
     public async Task<Object> SearchMaps()
     {
-        var database = client.GetDatabase("QH_Maps_Default");
+        var database = client.GetDatabase(databaseName);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var payload = String.Empty;
         object response;
