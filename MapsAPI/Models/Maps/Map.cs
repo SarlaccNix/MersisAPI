@@ -44,6 +44,8 @@ public class SearchMap
     
     [BsonElement("creatorId")] public string CreatorId { get; set; }
     
+    [BsonElement("creatorName")] public string CreatorName { get; set; }
+    
     [BsonElement("favorites")] public int Favorites { get; set; }
     
     [BsonElement("downloaded_qty")] public int Downloads_Quantity { get; set; }

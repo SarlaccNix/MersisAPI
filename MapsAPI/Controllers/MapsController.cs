@@ -64,7 +64,6 @@ public class MapsController : ControllerBase
         {
             id = uploadedMap.Id,
             mapName = uploadedMap.MapName,
-            mapFile = emptyByte,
             creatorId = uploadedMap.CreatorId,
             creatorName = uploadedMap.CreatorName,
             creation_Date_Time = uploadedMap.Creation_Date_Time,
@@ -290,6 +289,7 @@ public class MapsController : ControllerBase
                 {
                     Id = map.Id, MapName = map.MapName,
                     CreatorId = map.CreatorId,
+                    CreatorName = map.CreatorName,
                     tags = map.tags,
                     MapDescription = map.MapDescription,
                     MapVersion = map.MapVersion,
