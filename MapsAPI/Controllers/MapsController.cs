@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
 using MapsAPI.Models;
+using MapsAPI.Models.Users;
 
 namespace MapsAPI.Controllers;
 
@@ -45,7 +46,7 @@ public class MapsController : ControllerBase
         {
             MapName = payloadData.mapName, CreatorId = payloadData.creatorId, CreatorName = payloadData.creatorName,Id = payloadData.id,
             MapFile = payloadData.mapFile, MapDescription = payloadData.description,
-            MapVersion = 1, Creation_Date_Time = DateTime.Now, Last_Edited_Date_Time = DateTime.Now
+            MapVersion = 1, Creation_Date_Time = DateTime.Now, Last_Edited_Date_Time = DateTime.Now, MapPreview = payloadData.mapPreviewImage
         };
         
         try
@@ -69,7 +70,8 @@ public class MapsController : ControllerBase
             creation_Date_Time = uploadedMap.Creation_Date_Time,
             last_Edited_Date_Time = uploadedMap.Last_Edited_Date_Time,
             favorites = uploadedMap.Favorites,
-            downloaded_quantity = uploadedMap.Downloads_Quantity
+            downloaded_quantity = uploadedMap.Downloads_Quantity,
+            mapPreview = payloadData.mapPreviewImage
         };
         return new OkObjectResult(mapResponse);
     }
@@ -153,16 +155,11 @@ public class MapsController : ControllerBase
     [HttpPut("updateTableField")]
     public async Task<string> UpdateTableField()
     {
-        // var contentType = new MediaTypeWithQualityHeaderValue("application/json");
-        // List<Maps> mapListData;
         var database = client.GetDatabase(databaseName);
         var defaultMapsDb = database.GetCollection<Map>("QH_Maps");
         var update = Builders<Map>.Update.Set("MapVersion", "1");
         FilterDefinition<Map> filter = Builders<Map>.Filter.Empty;
         await defaultMapsDb.UpdateManyAsync(filter, update);
-        // var fields = filter.Exclude(x => x.MapFile);
-        // mapListData = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
-        // mapsList[Maps] = defaultMapsDb.Find(x => true).Project<MapsList>(fields).ToList();
         return "Updated";
     }
 
@@ -302,7 +299,6 @@ public class MapsController : ControllerBase
             }
         }
 
-
         // return new OkObjectResult(wrappedMapResults);
         if (mapResults != null && mapResults.Any())
         {
@@ -323,5 +319,5 @@ public class MapsController : ControllerBase
 
         return error;
     }
-    
+
 }
