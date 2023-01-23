@@ -140,7 +140,7 @@ public class CharacterData
     [BsonElement("creation_Date_Time")] public DateTime? Creation_Date_Time { get; set; }
     [BsonElement("last_Edited_Date_Time")] public DateTime? Last_Edited_Date_Time { get; set; }
     
-    [BsonElement("favorites")] public int Favorites { get; set; }
+    [BsonElement("likes")] public int Likes { get; set; }
     
     [BsonElement("privacy")] public  bool privacy { get; set; }
     [BsonElement("tags")] public List<string> tags { get; set; }

@@ -12,7 +12,7 @@ public class Map
     [BsonElement("creatorName")] public string CreatorName { get; set; }
     [BsonElement("mapFile")] public byte[] MapFile { get; set; } = null!;
 
-    [BsonElement("favorites")] public int Favorites { get; set; }
+    [BsonElement("likes")] public int Likes { get; set; }
 
     [BsonElement("downloaded_qty")] public int Downloads_Quantity { get; set; }
 
@@ -45,9 +45,9 @@ public class SearchMap
     [BsonElement("creatorId")] public string CreatorId { get; set; }
     
     [BsonElement("creatorName")] public string CreatorName { get; set; }
-    
-    [BsonElement("favorites")] public int Favorites { get; set; }
-    
+
+    [BsonElement("likes")] public int Likes { get; set; }
+
     [BsonElement("downloaded_qty")] public int Downloads_Quantity { get; set; }
     
     [BsonElement("creation_Date_Time")] public DateTime? Creation_Date_Time { get; set; }

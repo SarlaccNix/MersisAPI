@@ -26,8 +26,7 @@ public class MapsController : ControllerBase
     {
         _logger = logger;
     }
-
-
+    
     [HttpPost("createNewMap")]
     public async Task<OkObjectResult> Post()
     {
@@ -69,7 +68,7 @@ public class MapsController : ControllerBase
             creatorName = uploadedMap.CreatorName,
             creation_Date_Time = uploadedMap.Creation_Date_Time,
             last_Edited_Date_Time = uploadedMap.Last_Edited_Date_Time,
-            favorites = uploadedMap.Favorites,
+            likes = uploadedMap.Likes,
             downloaded_quantity = uploadedMap.Downloads_Quantity,
             mapPreview = payloadData.mapPreviewImage
         };
@@ -97,8 +96,6 @@ public class MapsController : ControllerBase
         return mapListData;
     }
     
-    
-
     [HttpPut("updateMap")]
     public async Task<string> UpdateMap()
     {
@@ -273,9 +270,7 @@ public class MapsController : ControllerBase
             filter &= userFilter;
         }
 
-        mapResults = await defaultMapsDb.Find(filter).Skip((currentPage - 1) * currentPagination)
-            .Limit(currentPagination).ToListAsync();
-
+        mapResults = await defaultMapsDb.Find(filter).Skip((currentPage - 1) * currentPagination).Limit(currentPagination).Sort("{last_Edited_Date_Time: -1}").ToListAsync();
         searchedMaps = new List<SearchMap>();
 
         if (mapResults != null)
@@ -290,7 +285,7 @@ public class MapsController : ControllerBase
                     tags = map.tags,
                     MapDescription = map.MapDescription,
                     MapVersion = map.MapVersion,
-                    Favorites = map.Favorites,
+                    Likes = map.Likes,
                     Downloads_Quantity = map.Downloads_Quantity,
                     Creation_Date_Time = map.Creation_Date_Time,
                     Last_Edited_Date_Time = map.Last_Edited_Date_Time,
@@ -320,4 +315,100 @@ public class MapsController : ControllerBase
         return error;
     }
 
+    [HttpPost("like")]
+    public async Task<Object> LikeMap()
+    {
+        //Define generals
+        var database = client.GetDatabase(databaseName);
+        var mapsDb = database.GetCollection<Map>("QH_Maps");
+        var usersDb = database.GetCollection<User>("Users");
+        var payload = String.Empty;
+        User user;
+        Map map;
+        bool like = false;
+        object response;
+        object error = new
+        {
+            Error = "Please provide a valid user ID and/or map ID"
+        };
+        
+        //Fetch request body 
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+        var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
+        //Find referenced map and user
+        if (!string.IsNullOrEmpty(payloadJson.userId.ToString()) && !string.IsNullOrEmpty(payloadJson.mapId.ToString()))
+        {
+            like = payloadJson.like;
+            string currentMapId = payloadJson.mapId;
+            string currentUserId = payloadJson.userId;
+            FilterDefinition<Map> mapFilter = Builders<Map>.Filter.Eq("_id",ObjectId.Parse(currentMapId));
+            FilterDefinition<User> userFilter = Builders<User>.Filter.Eq("_id",currentUserId);
+            map  = await mapsDb.Find(mapFilter)
+                .FirstOrDefaultAsync();
+            user = await usersDb.Find(userFilter)
+                .FirstOrDefaultAsync();
+            
+            //Set like/dislikes based on payload data
+            if (like)
+            {
+                int currentLikes = map.Likes;
+                string[] userLikedMaps = user.likedMaps;
+                
+                //Check if map is already liked by user
+                var result = Array.Find(userLikedMaps, e => e == currentMapId);
+                if (string.IsNullOrEmpty(result))
+                {
+                    //Add up map like and add map to user liked maps array and update data on map and user entries.
+                    userLikedMaps.Append(currentMapId);
+                    var mapUpdate = Builders<Map>.Update.Set("likes", currentLikes+1);
+                    var userUpdate = Builders<User>.Update.Set("likedMaps", userLikedMaps);
+                    mapsDb.UpdateOne(mapFilter, mapUpdate);
+                    usersDb.UpdateOne(userFilter, userUpdate); 
+                    return response = new
+                    {
+                        response = $"{user.username} liked {map.MapName} map."
+                    };
+                }
+                return response = new
+                {
+                    response = $"{map.MapName} map already liked by user {user.username}. No changes were made."
+                };
+            }
+            else
+            {
+                int likes = 0;  
+                int currentLikes = map.Likes;
+                likes = currentLikes == 0 ? likes = 0 : likes = currentLikes - 1;
+                string[] userLikedMaps = user.likedMaps;
+                var result = Array.Find(userLikedMaps, e => e == currentMapId);
+                if (string.IsNullOrEmpty(result))
+                {
+                    //Add up map like and add map to user liked maps array and update data on map and user entries.
+                    userLikedMaps.Append(currentMapId);
+                    var mapUpdate = Builders<Map>.Update.Set("likes", likes);
+                    var userUpdate = Builders<User>.Update.Set("likedMaps", "1");
+                    mapsDb.UpdateOne(mapFilter, mapUpdate);
+                    usersDb.UpdateOne(userFilter, userUpdate);
+                    return response = new
+                    {
+                        response = $"{user.username} disliked {map.MapName} map."
+                    };
+                }
+            }
+        }
+       
+        return error;
+    }
+
+    [HttpPatch("updateFieldName")]
+    public async void UpdateFieldName()
+    {
+        var database = client.GetDatabase(databaseName);
+        var mapsCollection = database.GetCollection<Map>("QH_Maps");
+        var update = Builders<Map>.Update.Rename("favorites", "likes");
+        mapsCollection.UpdateMany(new BsonDocument(), update);
+    }
 }

@@ -13,7 +13,7 @@ public class MapsList
 
     [BsonElement("creatorId")] public string CreatorId { get; set; }
 
-    [BsonElement("favorites")] public int Favorites { get; set; }
+    [BsonElement("likes")] public int Likes { get; set; }
 
     [BsonElement("downloaded_qty")] public int Downloaded_Quantity { get; set; }
     
