@@ -156,4 +156,15 @@ public class UserController : ControllerBase
         };
         return new OkObjectResult(updatedUser);
     }
+
+    [HttpPatch("addField")]
+    public async void AddField()
+    {
+        var database = client.GetDatabase("QuestHaven");
+        var usersCollection = database.GetCollection<User>("Users");
+        var filterDefinition = Builders<User>.Filter.Where(w => w.username!=null);
+        var updateDefinition = Builders<User>.Update
+            .Set(d => d.likedMaps, Array.Empty<string>());
+        usersCollection.UpdateMany(filterDefinition, updateDefinition);
+    }
 }

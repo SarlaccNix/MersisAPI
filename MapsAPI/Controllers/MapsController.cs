@@ -350,21 +350,19 @@ public class MapsController : ControllerBase
                 .FirstOrDefaultAsync();
             user = await usersDb.Find(userFilter)
                 .FirstOrDefaultAsync();
-            
+            List<string> userLikedMaps = new List<string>(user.likedMaps);
             //Set like/dislikes based on payload data
             if (like)
             {
                 int currentLikes = map.Likes;
-                string[] userLikedMaps = user.likedMaps;
                 
                 //Check if map is already liked by user
-                var result = Array.Find(userLikedMaps, e => e == currentMapId);
-                if (string.IsNullOrEmpty(result))
+                if (!userLikedMaps.Contains(currentMapId))
                 {
                     //Add up map like and add map to user liked maps array and update data on map and user entries.
-                    userLikedMaps.Append(currentMapId);
+                    userLikedMaps.Add(currentMapId);
                     var mapUpdate = Builders<Map>.Update.Set("likes", currentLikes+1);
-                    var userUpdate = Builders<User>.Update.Set("likedMaps", userLikedMaps);
+                    var userUpdate = Builders<User>.Update.Set("likedMaps", userLikedMaps.ToArray());
                     mapsDb.UpdateOne(mapFilter, mapUpdate);
                     usersDb.UpdateOne(userFilter, userUpdate); 
                     return response = new
@@ -382,19 +380,17 @@ public class MapsController : ControllerBase
                 int likes = 0;  
                 int currentLikes = map.Likes;
                 likes = currentLikes == 0 ? likes = 0 : likes = currentLikes - 1;
-                string[] userLikedMaps = user.likedMaps;
-                var result = Array.Find(userLikedMaps, e => e == currentMapId);
-                if (string.IsNullOrEmpty(result))
+                if (userLikedMaps.Contains(currentMapId))
                 {
                     //Add up map like and add map to user liked maps array and update data on map and user entries.
-                    userLikedMaps.Append(currentMapId);
+                    userLikedMaps.Remove(currentMapId);
                     var mapUpdate = Builders<Map>.Update.Set("likes", likes);
-                    var userUpdate = Builders<User>.Update.Set("likedMaps", "1");
+                    var userUpdate = Builders<User>.Update.Set("likedMaps", userLikedMaps.ToArray());
                     mapsDb.UpdateOne(mapFilter, mapUpdate);
                     usersDb.UpdateOne(userFilter, userUpdate);
                     return response = new
                     {
-                        response = $"{user.username} disliked {map.MapName} map."
+                        response = $"{user.username} removed liked from {map.MapName} map."
                     };
                 }
             }
