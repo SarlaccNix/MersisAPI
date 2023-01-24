@@ -167,4 +167,48 @@ public class UserController : ControllerBase
             .Set(d => d.likedMaps, Array.Empty<string>());
         usersCollection.UpdateMany(filterDefinition, updateDefinition);
     }
+
+    [HttpPost("likedMaps")]
+    public async Task<OkObjectResult>  GetLikedMaps()
+    {
+        var database = client.GetDatabase("QuestHaven");
+        var usersCollection = database.GetCollection<User>("Users");
+        var payload = String.Empty;
+        var error = new
+        {
+            error = "Error: missing id"
+        };
+        var idNotFound = new
+        {
+            error = "Error: ID does not match any user in the DB"
+        };
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        User userData = JsonConvert.DeserializeObject<User>(payload);
+        
+        if (userData == null || string.IsNullOrEmpty(userData.id))
+        {
+            return new OkObjectResult(error);
+        }
+        
+        FilterDefinition<User> filter = Builders<User>.Filter.Eq("_id", userData.id);
+        var currentUser = await usersCollection
+            .Find(filter)
+            .FirstOrDefaultAsync();
+        if (currentUser != null)
+        {
+            var userLikedMaps = new
+            {
+                id = currentUser.id,
+                username = currentUser.username,
+                likedMaps = currentUser.likedMaps,
+            };
+            return new OkObjectResult(userLikedMaps);
+        }
+
+        return new OkObjectResult(idNotFound);
+    }
 }
