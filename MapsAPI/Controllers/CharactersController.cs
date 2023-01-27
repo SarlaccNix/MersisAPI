@@ -16,6 +16,7 @@ public class CharactersController : ControllerBase
     // MapperConfiguration config = new MapperConfiguration(cfg => cfg.CreateMap<Order, OrderDto>());
     public List<CharacterData> searchedCharacters = new List<CharacterData>();
     private FilterDefinitionBuilder<CharacterData> builder = Builders<CharacterData>.Filter;
+    private string databaseName = "QuestHaven";
 
     private MongoClient client =
         new MongoClient(
@@ -25,7 +26,7 @@ public class CharactersController : ControllerBase
     public string newCharacter()
     {
         
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
         var payload = String.Empty;
         using (StreamReader reader = new StreamReader(Request.Body))
@@ -65,7 +66,7 @@ public class CharactersController : ControllerBase
 
         var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
         String id = payloadData.id;
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
         var character = await charactersCollection
             .Find(Builders<CharacterData>.Filter.Eq("_id", ObjectId.Parse(id)))
@@ -104,7 +105,7 @@ public class CharactersController : ControllerBase
     [HttpPost("searchCharacters")]
     public async Task<Object> SearchMaps()
     {
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
         var payload = String.Empty;
         List<CharacterData> charactersResult = null;
@@ -122,7 +123,7 @@ public class CharactersController : ControllerBase
 
         var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
         string searchText = payloadJson.SearchText;
-        dynamic tags = payloadJson.Tags;
+        string[] tags = payloadJson.Tags.ToObject<string[]>();
         string creatorName = payloadJson.creatorName;
         string creatorId = payloadJson.creatorId;
         var find = charactersCollection.Find(filter);
@@ -144,14 +145,9 @@ public class CharactersController : ControllerBase
             filter &= searchTextFilter;
         }
 
-        if (tags != null)
+        if (tags is { Length: > 0 })
         {
-            
-            foreach (string tag in tags)
-            {
-                var tagsFilter = builder.Regex("tags", new BsonRegularExpression( tag, "i"));
-                filter &= tagsFilter;
-            }
+            filter = (from tag in tags where tag != "" select builder.Regex("tags", new BsonRegularExpression(tag, "i"))).Aggregate(filter, (current, tagsFilter) => current & tagsFilter);
         }
 
         if (!string.IsNullOrEmpty(creatorName))
@@ -223,7 +219,7 @@ public class CharactersController : ControllerBase
         {
             return error;
         }
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
         var characterDelete =  charactersCollection
             .DeleteOne(Builders<CharacterData>.Filter.Eq("_id", ObjectId.Parse(id)));
@@ -236,5 +232,14 @@ public class CharactersController : ControllerBase
             success = $"Character with ID: {id} deleted."
         };
         return new OkObjectResult(deleteResponse);
+    }
+    
+    [HttpPatch("updateFieldName")]
+    public async void UpdateFieldName()
+    {
+        var database = client.GetDatabase(databaseName);
+        var mapsCollection = database.GetCollection<Character>("QH_Characters");
+        var update = Builders<Character>.Update.Rename("favorites", "likes");
+        mapsCollection.UpdateMany(new BsonDocument(), update);
     }
 }
