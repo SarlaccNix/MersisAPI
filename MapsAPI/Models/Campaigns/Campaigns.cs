@@ -52,13 +52,14 @@ public class Campaign
     
     [BsonElement("playstyleRules")] public string playstyleRules { get; set; }
        
+    [BsonIgnoreIfNull]
+    [BsonElement("currentPlayers")] public string currentPlayers { get; set; }
+    
     // [BsonElement("ruleset")] public string ruleset { get; set; }
 
     // [BsonElement("length")] public string length { get; set; }
     
     // [BsonElement("daysOfWeek")] public string daysOfWeek { get; set; }
-    
-    // [BsonElement("currentPlayers")] public string currentPlayers { get; set; }
     
     // [BsonElement("campaignOwner")] public string campaignOwner { get; set; }
 
