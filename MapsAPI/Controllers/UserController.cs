@@ -15,12 +15,12 @@ public class UserController : ControllerBase
     private MongoClient client =
         new MongoClient(
             "mongodb+srv://doadmin:fuzs536H0R9P124y@db-mongodb-nyc1-91572-de834d8c.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
-
+    private string databaseName = "QuestHaven";
     [HttpPost("login")]
     public async Task<OkObjectResult> Login()
     {
 
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var usersCollection = database.GetCollection<User>("Users");
         var payload = String.Empty;
 
@@ -90,7 +90,7 @@ public class UserController : ControllerBase
     [HttpPost("username")]
     public async Task<OkObjectResult> CreateQhUsername()
     {
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var usersCollection = database.GetCollection<User>("Users");
         var payload = String.Empty;
         User updatedData = new User();
@@ -128,7 +128,8 @@ public class UserController : ControllerBase
             Random randomizer = new Random();
             string tagValue = randomizer.Next(1000, 9999).ToString();
             currentUser.qh_UserTag = userData.username + "#" + tagValue;
-            var update = Builders<User>.Update.Set("qh_UserTag", currentUser.qh_UserTag).Set("username", userData.username);
+            var update = Builders<User>.Update.Set("qh_UserTag", currentUser.qh_UserTag)
+                .Set("username", userData.username);
             var fetchUpdate = await usersCollection.UpdateOneAsync(filter, update);
             if (fetchUpdate.MatchedCount == 1)
             {
@@ -160,18 +161,18 @@ public class UserController : ControllerBase
     [HttpPatch("addField")]
     public async void AddField()
     {
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var usersCollection = database.GetCollection<User>("Users");
-        var filterDefinition = Builders<User>.Filter.Where(w => w.username!=null);
+        var filterDefinition = Builders<User>.Filter.Where(w => w.username != null);
         var updateDefinition = Builders<User>.Update
             .Set(d => d.likedMaps, Array.Empty<string>());
         usersCollection.UpdateMany(filterDefinition, updateDefinition);
     }
 
     [HttpPost("likedMaps")]
-    public async Task<OkObjectResult>  GetLikedMaps()
+    public async Task<OkObjectResult> GetLikedMaps()
     {
-        var database = client.GetDatabase("QuestHaven");
+        var database = client.GetDatabase(databaseName);
         var usersCollection = database.GetCollection<User>("Users");
         var payload = String.Empty;
         var error = new
@@ -188,12 +189,12 @@ public class UserController : ControllerBase
         }
 
         User userData = JsonConvert.DeserializeObject<User>(payload);
-        
+
         if (userData == null || string.IsNullOrEmpty(userData.id))
         {
             return new OkObjectResult(error);
         }
-        
+
         FilterDefinition<User> filter = Builders<User>.Filter.Eq("_id", userData.id);
         var currentUser = await usersCollection
             .Find(filter)
