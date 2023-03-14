@@ -11,7 +11,6 @@ namespace MapsAPI.Controllers;
 
 public class CampaignsController : ControllerBase
 {
-    // MapperConfiguration config = new MapperConfiguration(cfg => cfg.CreateMap<Order, OrderDto>());
     public List<CampaignData> searchedCampaigns = new List<CampaignData>();
     private FilterDefinitionBuilder<CampaignData> builder = Builders<CampaignData>.Filter;
     private string databaseName = "QuestHaven";
@@ -21,23 +20,21 @@ public class CampaignsController : ControllerBase
             "mongodb+srv://doadmin:fuzs536H0R9P124y@db-mongodb-nyc1-91572-de834d8c.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
     
     [HttpPost("campaigns")]
-    public string newCampaign()
+    public string NewCampaign([FromForm] Campaign campaignForm)
     {
         
         var database = client.GetDatabase(databaseName);
         var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
-        var payload = String.Empty;
-        using (StreamReader reader = new StreamReader(Request.Body))
+        CampaignData newCampaign = new CampaignData();
+        if (campaignForm == null)
         {
-            payload = reader.ReadToEndAsync().Result;
-        }
-        CampaignData newCampaign = JsonConvert.DeserializeObject<CampaignData>(payload);
-        if (newCampaign == null)
-        {
-            return "Error: missing JSON data";
+            return "Error: missing campaign form data";
         }
         newCampaign.creation_Date_Time = DateTime.Now;
         newCampaign.last_Edited_Date_Time = DateTime.Now;
+        newCampaign.campaign = campaignForm;
+        newCampaign.name = campaignForm.name;
+        newCampaign.creatorId = campaignForm.creatorId;
         try
         {
             campaignsCollection.InsertOne(newCampaign);
@@ -52,7 +49,7 @@ public class CampaignsController : ControllerBase
     }
     
     [HttpPost("getCampaignById")]
-    public async Task<OkObjectResult> getCharacter()
+    public async Task<OkObjectResult> GetCampaign()
     {
         var payload = String.Empty;
         object? response;
@@ -275,48 +272,5 @@ public class CampaignsController : ControllerBase
     //     }
     //
     //     return error;
-    // }
-    
-    // [HttpDelete("characters")]
-    // public async Task<Object> DeleteCharacter()
-    // {
-    //     var payload = String.Empty;
-    //     object error = new
-    //     {
-    //         Error = "Error, no match found using the current id. No characters were deleted."
-    //     };
-    //     using (StreamReader reader = new StreamReader(Request.Body))
-    //     {
-    //         payload = reader.ReadToEndAsync().Result;
-    //     }
-    //
-    //     var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
-    //     String id = payloadData.id;
-    //     if (id.Equals(""))
-    //     {
-    //         return error;
-    //     }
-    //     var database = client.GetDatabase(databaseName);
-    //     var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
-    //     var characterDelete =  charactersCollection
-    //         .DeleteOne(Builders<CharacterData>.Filter.Eq("_id", ObjectId.Parse(id)));
-    //     if (characterDelete.DeletedCount == 0)
-    //     {
-    //         return error;
-    //     }
-    //     var deleteResponse = new
-    //     {
-    //         success = $"Character with ID: {id} deleted."
-    //     };
-    //     return new OkObjectResult(deleteResponse);
-    // }
-    //
-    // [HttpPatch("updateFieldName")]
-    // public async void UpdateFieldName()
-    // {
-    //     var database = client.GetDatabase(databaseName);
-    //     var mapsCollection = database.GetCollection<Character>("QH_Characters");
-    //     var update = Builders<Character>.Update.Rename("favorites", "likes");
-    //     mapsCollection.UpdateMany(new BsonDocument(), update);
     // }
 }
