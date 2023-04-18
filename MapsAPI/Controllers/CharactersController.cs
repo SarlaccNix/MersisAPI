@@ -102,8 +102,9 @@ public class CharactersController : ControllerBase
     {
         yield break;
     }
+    
     [HttpPost("searchCharacters")]
-    public async Task<Object> SearchMaps()
+    public async Task<Object> SearchCharacters()
     {
         var database = client.GetDatabase(databaseName);
         var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
@@ -124,7 +125,6 @@ public class CharactersController : ControllerBase
         var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
         string searchText = payloadJson.SearchText;
         string[] tags = payloadJson.Tags.ToObject<string[]>();
-        string creatorName = payloadJson.creatorName;
         string creatorId = payloadJson.creatorId;
         var find = charactersCollection.Find(filter);
         int currentPage = 1, currentPagination = 10;
@@ -150,9 +150,9 @@ public class CharactersController : ControllerBase
             filter = (from tag in tags where tag != "" select builder.Regex("tags", new BsonRegularExpression(tag, "i"))).Aggregate(filter, (current, tagsFilter) => current & tagsFilter);
         }
 
-        if (!string.IsNullOrEmpty(creatorName))
+        if (!string.IsNullOrEmpty(creatorId))
         {
-            var userFilter = builder.Regex("creatorName", new(creatorName, "i"));
+            var userFilter = builder.Regex("creatorId", new(creatorId, "i"));
             filter &= userFilter;
         }
 
@@ -200,6 +200,7 @@ public class CharactersController : ControllerBase
 
         return error;
     }
+    
     [HttpDelete("characters")]
     public async Task<Object> DeleteCharacter()
     {
