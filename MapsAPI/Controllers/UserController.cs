@@ -48,9 +48,10 @@ public class UserController : ControllerBase
             try
             {
                 var newUser = loginData;
-                // Random randomizer = new Random();
+                Random randomizer = new Random();
                 // string tagValue = randomizer.Next(1000, 9999).ToString();
                 // newUser.qh_UserTag = newUser.username + "#" + tagValue;
+                newUser.profilePicIndex = randomizer.Next(0, 6);
                 newUser.creation_Date_Time = DateTime.Now;
                 newUser.last_Login_Date_Time = DateTime.Now;
                 usersCollection.InsertOne(newUser);
@@ -60,7 +61,8 @@ public class UserController : ControllerBase
                     username = newUser.username,
                     qh_UserTag = newUser.qh_UserTag,
                     creation_Date_Time = newUser.creation_Date_Time,
-                    last_Login_Date_Time = newUser.last_Login_Date_Time
+                    last_Login_Date_Time = newUser.last_Login_Date_Time,
+                    //profilePicIndex = newUser.profilePicIndex
                 };
                 return new OkObjectResult(newUserAdded);
             }
@@ -161,12 +163,22 @@ public class UserController : ControllerBase
     [HttpPatch("addField")]
     public async void AddField()
     {
+        Random random = new Random();
+
         var database = client.GetDatabase(databaseName);
         var usersCollection = database.GetCollection<User>("Users");
-        var filterDefinition = Builders<User>.Filter.Where(w => w.username != null);
-        var updateDefinition = Builders<User>.Update
-            .Set(d => d.likedMaps, Array.Empty<string>());
-        usersCollection.UpdateMany(filterDefinition, updateDefinition);
+        var filterDefinition = Builders<User>.Filter.Where(w => w.qh_UserTag != null);
+        var users = usersCollection.Find(filterDefinition).ToList();
+        foreach( var user in users)
+        {
+            var index = random.Next(0, 6);
+            var userfilter = Builders<User>.Filter.Eq(doc => doc.qh_UserTag, user.qh_UserTag);
+            var updateDefinition = Builders<User>.Update
+                .Set(d => d.profilePicIndex, index);
+
+            usersCollection.UpdateOne(userfilter, updateDefinition);
+        }
+
     }
 
     [HttpPost("likedMaps")]
