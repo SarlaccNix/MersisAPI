@@ -62,7 +62,8 @@ public class UserController : ControllerBase
                     qh_UserTag = newUser.qh_UserTag,
                     creation_Date_Time = newUser.creation_Date_Time,
                     last_Login_Date_Time = newUser.last_Login_Date_Time,
-                    //profilePicIndex = newUser.profilePicIndex
+                    profilePicIndex = newUser.profilePicIndex,
+                    avatarId = newUser.avatarID
                 };
                 return new OkObjectResult(newUserAdded);
             }
