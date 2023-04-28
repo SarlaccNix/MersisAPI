@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
-using MapsAPI.Models.Users;
-using System;
 
 namespace MapsAPI.Controllers;
 
