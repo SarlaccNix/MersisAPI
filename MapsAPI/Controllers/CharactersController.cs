@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
+using MapsAPI.Models.Users;
+using System;
 
 namespace MapsAPI.Controllers;
 
@@ -54,6 +56,44 @@ public class CharactersController : ControllerBase
         }
         
     }
+
+    [HttpPatch("characters")]
+    public async Task<string> UpdateCharacter()
+    {
+
+        var database = client.GetDatabase(databaseName);
+        var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
+        var payload = String.Empty;
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+        CharacterData characterData = JsonConvert.DeserializeObject<CharacterData>(payload);
+        if (characterData == null)
+        {
+            return "Error: missing JSON data";
+        }
+        Console.WriteLine(characterData);
+        characterData.name = characterData.Character.figureName;
+        characterData.Creation_Date_Time = DateTime.Now;
+        characterData.Last_Edited_Date_Time = DateTime.Now;
+        characterData.parentCharacterId = !string.IsNullOrEmpty(characterData.parentCharacterId) ? characterData.parentCharacterId : null;
+        var character = Builders<CharacterData>.Filter.Eq("id", characterData.id);
+        var updateDefinition = Builders<CharacterData>.Update
+            .Set("character", characterData.Character);
+        try
+        {
+           var update =  await charactersCollection.UpdateOneAsync(character, updateDefinition);
+            return "Character added to Database";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error: " + e);
+            return "Error: " + e;
+        }
+
+    }
+
     [HttpPost("getCharacterById")]
     public async Task<OkObjectResult> getCharacter()
     {

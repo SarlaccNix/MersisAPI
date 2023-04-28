@@ -163,6 +163,40 @@ public class UserController : ControllerBase
         return new OkObjectResult(updatedUser);
     }
 
+    [HttpPatch("profilePicture")]
+    public async Task<string> UpdateProfilePicture()
+    {
+        string error = string.Empty;
+        var database = client.GetDatabase(databaseName);
+        var usersCollection = database.GetCollection<User>("Users");
+        var payload = String.Empty;
+        User updatedData = new User();
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        User user = JsonConvert.DeserializeObject<User>(payload);
+
+        if (user == null || string.IsNullOrEmpty(user.id))
+        {
+
+            error = "Error: missing id";
+
+            return error;
+        }
+
+        FilterDefinition<User> filter = Builders<User>.Filter.Eq("_id", user.id);
+        var currentUser = await usersCollection
+            .Find(Builders<User>.Filter.Eq("_id", user.id))
+            .FirstOrDefaultAsync();
+
+        var update = Builders<User>.Update.Set("profile_picture_index", user.profilePicIndex);
+        var fetchUpdate = await usersCollection.UpdateOneAsync(filter, update);
+        return "Profile picture updated.";
+    }
+
     [HttpPatch("addField")]
     public async void AddField()
     {
