@@ -1,5 +1,4 @@
 ﻿namespace MapsAPI.Models.Users;
- 
 using MongoDB.Bson.Serialization.Attributes;
 
 public class User
@@ -14,5 +13,7 @@ public class User
     [BsonElement("creation_Date_Time")] public DateTime? creation_Date_Time { get; set; }
     [BsonElement("last_login_Date_Time")] public DateTime? last_Login_Date_Time { get; set; }
     [BsonElement("profile_picture_index")] public int profilePicIndex { get; set; }
+
+    [BsonElement("avatar_ID")] public string avatarID { get; set; }
 
 }
