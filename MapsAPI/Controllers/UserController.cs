@@ -85,7 +85,9 @@ public class UserController : ControllerBase
             username = currentUser.username,
             qh_UserTag = currentUser.qh_UserTag,
             creation_Date_Time = currentUser.creation_Date_Time,
-            last_Login_Date_Time = currentUser.last_Login_Date_Time
+            last_Login_Date_Time = currentUser.last_Login_Date_Time,
+            profilePicIndex = currentUser.profilePicIndex,
+            avatarId = currentUser.avatarID
         };
         return new OkObjectResult(updatedLogin);
     }
