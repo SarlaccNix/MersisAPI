@@ -71,7 +71,6 @@ public class CharactersController : ControllerBase
         {
             return "Error: missing JSON data";
         }
-        Console.WriteLine(characterData);
         characterData.name = characterData.Character.figureName;
         characterData.Creation_Date_Time = DateTime.Now;
         characterData.Last_Edited_Date_Time = DateTime.Now;
