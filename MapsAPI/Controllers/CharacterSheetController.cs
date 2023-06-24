@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
-using MapsAPI.CharacterSheetsData;
 using MapsAPI.CharacterSheets;
 
 namespace MapsAPI.Controllers;
@@ -103,7 +102,7 @@ public class CharacterSheetController : ControllerBase
     {
 
         var database = client.GetDatabase(databaseName);
-        var sheetUserDataCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheets");
+        var sheetUserDataCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheetsData");
         var payload = String.Empty;
         using (StreamReader reader = new StreamReader(Request.Body))
         {
@@ -139,7 +138,7 @@ public class CharacterSheetController : ControllerBase
     {
 
         var database = client.GetDatabase(databaseName);
-        var userDataCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheets");
+        var userDataCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheetsData");
         var payload = String.Empty;
         using (StreamReader reader = new StreamReader(Request.Body))
         {
@@ -219,7 +218,7 @@ public class CharacterSheetController : ControllerBase
     public async Task<Object> SearchCharacterSheetsByUserID()
     {
         var database = client.GetDatabase(databaseName);
-        var sheetTemplateCollection = database.GetCollection<CharacterSheetsTemplateModel>("QH_CharacterSheetsTemplates");
+        var sheetTemplateCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheetsData");
         var payload = String.Empty;
 
         object error = new
@@ -227,7 +226,7 @@ public class CharacterSheetController : ControllerBase
             Error = "Error, no match found using the current searching criteria"
         };
 
-        var filter = Builders<CharacterSheetsTemplateModel>.Filter.Empty;
+        var filter = Builders<CharacterSheetData>.Filter.Empty;
 
         using (StreamReader reader = new StreamReader(Request.Body))
         {
@@ -253,38 +252,21 @@ public class CharacterSheetController : ControllerBase
 
         if (!string.IsNullOrEmpty(creatorId))
         {
-            filter = Builders<CharacterSheetsTemplateModel>.Filter.Regex("creatorId", new(creatorId, "i"));
+            filter = Builders<CharacterSheetData>.Filter.Regex("creatorId", new(creatorId, "i"));
         }
 
-        List<CharacterSheetsTemplateModel> SheetTemplateResult = await sheetTemplateCollection.Find(filter).Skip((currentPage - 1) * currentPagination)
+        List<CharacterSheetData> SheetDataResult = await sheetTemplateCollection.Find(filter).Skip((currentPage - 1) * currentPagination)
             .Limit(currentPagination).ToListAsync();
 
-        List<CharacterSheetsTemplateModel> searchedSheetTemplates = new List<CharacterSheetsTemplateModel>();
 
-        if (SheetTemplateResult != null)
-        {
-            foreach (CharacterSheetsTemplateModel sheetTemplate in SheetTemplateResult)
-            {
-                searchedSheetTemplates.Add(new CharacterSheetsTemplateModel()
-                {
-                    id = sheetTemplate.id,
-                    name = sheetTemplate.name,
-                    lastUpdate = sheetTemplate.lastUpdate,
-                    creationDate = sheetTemplate.creationDate,
-                    characterSheetTemplate = sheetTemplate.characterSheetTemplate
-                });
-            }
-        }
-
-
-        if (SheetTemplateResult != null && SheetTemplateResult.Any())
+        if (SheetDataResult != null && SheetDataResult.Any())
         {
             return  new
             {
-                // characters found on search
-                sheetTemplates = searchedSheetTemplates,
+                // Character Sheets found for the current user ID search
+                characterSheetsData = SheetDataResult,
                 // Amount of characters in the current page
-                Count = SheetTemplateResult.Count,
+                Count = SheetDataResult?.Count,
                 // Selected page number
                 Page = currentPage,
                 // Selected amount of items per page
