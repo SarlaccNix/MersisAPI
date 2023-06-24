@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.ResponseCompression;
+using MapsAPI.Models.Users;
 
 namespace MapsAPI.Controllers;
 
@@ -168,5 +170,46 @@ public class CampaignsController : ControllerBase
 
         return error;
     }
-    
+
+    [HttpPatch("addPlayerCampaign")]
+    public async Task<string> AddPlayerToCampaign()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
+        var usersCollection = database.GetCollection<User>("Users");
+
+
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+        String campaignID = payloadData.campaignID;
+        String userTag = payloadData.userTag;
+
+        var campaign = await campaignsCollection
+            .Find(Builders<CampaignData>.Filter.Eq("_id", ObjectId.Parse(campaignID)))
+            .FirstOrDefaultAsync();
+
+        var currentUser = await usersCollection
+            .Find(Builders<User>.Filter.Eq("qh_UserTag", userTag))
+            .FirstOrDefaultAsync();
+
+        if (campaign != null && currentUser != null)  
+        {
+            var updateDefinition = Builders<Campaign>.Update.Set("enrolledPlayersID", currentUser.id);
+
+            //var update = await campaignsCollection.UpdateOneAsync(campaign, updateDefinition);
+
+            return "Player added";
+
+        }else
+        {
+            return "No campaign found.";
+        }
+    }
+
 }

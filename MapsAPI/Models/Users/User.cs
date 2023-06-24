@@ -15,5 +15,6 @@ public class User
     [BsonElement("profile_picture_index")] public int profilePicIndex { get; set; }
 
     [BsonElement("avatar_ID")] public string avatarID { get; set; }
+    [BsonElement("enrolledCampaigns")] public string[] enrolledCampaignsID { get; set;}
 
 }
