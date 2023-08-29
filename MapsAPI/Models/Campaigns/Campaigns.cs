@@ -53,7 +53,8 @@ public class Campaign
     [BsonElement("playstyleRules")] public string playstyleRules { get; set; }
 
     [BsonElement("enrolledPlayersID")] public string[] enrolledPlayersID { get; set; }
-       
+    [BsonElement("invitedPlayersID")] public string[] invitedPlayersID { get; set; }
+
     [BsonIgnoreIfNull]
     [BsonElement("currentPlayers")] public string currentPlayers { get; set; }
     

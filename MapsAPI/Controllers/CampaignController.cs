@@ -171,7 +171,60 @@ public class CampaignsController : ControllerBase
         return error;
     }
 
-    [HttpPatch("addPlayerCampaign")]
+    [HttpPatch("InvitePlayerToCampaign")]
+    public async Task<string> InvitePlayerToCampaign()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
+        var usersCollection = database.GetCollection<User>("Users");
+
+
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+        String campaignID = payloadData.campaignID;
+        String userTag = payloadData.userTag;
+
+        var campaignData = await campaignsCollection
+            .Find(Builders<CampaignData>.Filter.Eq("_id", ObjectId.Parse(campaignID)))
+            .FirstOrDefaultAsync();
+
+        var currentUser = await usersCollection
+            .Find(Builders<User>.Filter.Eq("qh_UserTag", userTag))
+            .FirstOrDefaultAsync();
+
+        if (currentUser == null)
+        {
+            return "Error: Invalid player tag";
+        }
+
+        if (campaignData != null && currentUser != null)  
+        {
+            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq("_id", campaignID);
+
+            List<string> invitedPlayers = new List<string>(campaignData.campaign.invitedPlayersID);
+            invitedPlayers.Add(currentUser.qh_UserTag);
+
+            campaignData.campaign.invitedPlayersID = invitedPlayers.ToArray();
+
+            var updateDefinition = Builders<CampaignData>.Update.Set("campaign", campaignData);
+
+            var update = await campaignsCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+
+            return "Success: Player Invitation send";
+
+        }else
+        {
+            return "Error: No campaign found.";
+        }
+    }
+
+    [HttpPatch("AddPlayerToCampaign")]
     public async Task<string> AddPlayerToCampaign()
     {
         var database = client.GetDatabase(databaseName);
@@ -190,7 +243,7 @@ public class CampaignsController : ControllerBase
         String campaignID = payloadData.campaignID;
         String userTag = payloadData.userTag;
 
-        var campaign = await campaignsCollection
+        var campaignData = await campaignsCollection
             .Find(Builders<CampaignData>.Filter.Eq("_id", ObjectId.Parse(campaignID)))
             .FirstOrDefaultAsync();
 
@@ -198,17 +251,35 @@ public class CampaignsController : ControllerBase
             .Find(Builders<User>.Filter.Eq("qh_UserTag", userTag))
             .FirstOrDefaultAsync();
 
-        if (campaign != null && currentUser != null)  
+        if (currentUser == null)
         {
-            var updateDefinition = Builders<Campaign>.Update.Set("enrolledPlayersID", currentUser.id);
+            return "Error: Invalid player tag";
+        }
 
-            //var update = await campaignsCollection.UpdateOneAsync(campaign, updateDefinition);
-
-            return "Player added";
-
-        }else
+        if (campaignData != null && currentUser != null)
         {
-            return "No campaign found.";
+            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq("_id", campaignID);
+
+            List<string> invitedPlayers = new List<string>(campaignData.campaign.invitedPlayersID);
+            List<string> enrolledPlayers = new List<string>(campaignData.campaign.enrolledPlayersID);
+
+            invitedPlayers.Remove(userTag);
+            enrolledPlayers.Add(userTag);
+
+
+            campaignData.campaign.invitedPlayersID = invitedPlayers.ToArray();
+            campaignData.campaign.enrolledPlayersID = enrolledPlayers.ToArray();
+
+            var updateDefinition = Builders<CampaignData>.Update.Set("campaign", campaignData);
+
+            var update = await campaignsCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+
+            return "Success: Player added";
+
+        }
+        else
+        {
+            return "Error: No campaign found.";
         }
     }
 
