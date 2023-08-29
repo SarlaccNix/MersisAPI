@@ -191,7 +191,7 @@ public class CampaignsController : ControllerBase
         String userTag = payloadData.userTag;
 
         var campaignData = await campaignsCollection
-            .Find(Builders<CampaignData>.Filter.Eq("_id", ObjectId.Parse(campaignID)))
+            .Find(Builders<CampaignData>.Filter.Eq("campaign._id", ObjectId.Parse(campaignID)))
             .FirstOrDefaultAsync();
 
         var currentUser = await usersCollection
@@ -205,7 +205,7 @@ public class CampaignsController : ControllerBase
 
         if (campaignData != null && currentUser != null)  
         {
-            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq("_id", campaignID);
+            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq("campaign._id", ObjectId.Parse(campaignID));
 
             List<string> invitedPlayers = new List<string>(campaignData.campaign.invitedPlayersID);
             invitedPlayers.Add(currentUser.qh_UserTag);
@@ -258,7 +258,7 @@ public class CampaignsController : ControllerBase
 
         if (campaignData != null && currentUser != null)
         {
-            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq("campaign._id", campaignID);
+            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq("campaign._id", ObjectId.Parse(campaignID));
 
             List<string> invitedPlayers = new List<string>(campaignData.campaign.invitedPlayersID);
             List<string> enrolledPlayers = new List<string>(campaignData.campaign.enrolledPlayersID);
