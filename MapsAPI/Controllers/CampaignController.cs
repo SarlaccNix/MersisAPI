@@ -171,7 +171,7 @@ public class CampaignsController : ControllerBase
         return error;
     }
 
-    [HttpPatch("InvitePlayerToCampaign")]
+    [HttpPost("InvitePlayerToCampaign")]
     public async Task<string> InvitePlayerToCampaign()
     {
         var database = client.GetDatabase(databaseName);
@@ -224,7 +224,7 @@ public class CampaignsController : ControllerBase
         }
     }
 
-    [HttpPatch("AddPlayerToCampaign")]
+    [HttpPost("AddPlayerToCampaign")]
     public async Task<string> AddPlayerToCampaign()
     {
         var database = client.GetDatabase(databaseName);
