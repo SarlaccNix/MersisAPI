@@ -16,5 +16,6 @@ public class User
 
     [BsonElement("avatar_ID")] public string avatarID { get; set; }
     [BsonElement("enrolledCampaigns")] public string[] enrolledCampaignsID { get; set;}
+    [BsonElement("invitedCampaigns")] public string[] invitedCampaignsID { get; set; }
 
 }

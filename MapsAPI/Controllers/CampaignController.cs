@@ -171,7 +171,7 @@ public class CampaignsController : ControllerBase
         return error;
     }
 
-    [HttpPost("InvitePlayerToCampaign")]
+    [HttpPatch("InvitePlayerToCampaign")]
     public async Task<string> InvitePlayerToCampaign()
     {
         var database = client.GetDatabase(databaseName);
@@ -191,11 +191,11 @@ public class CampaignsController : ControllerBase
         String userTag = payloadData.userTag;
 
         var campaignData = await campaignsCollection
-            .Find(Builders<CampaignData>.Filter.Eq("campaign._id", ObjectId.Parse(campaignID)))
+            .Find(Builders<CampaignData>.Filter.Eq(c=> c.campaign.id, campaignID))
             .FirstOrDefaultAsync();
 
         var currentUser = await usersCollection
-            .Find(Builders<User>.Filter.Eq("qh_UserTag", userTag))
+            .Find(Builders<User>.Filter.Eq(user => user.qh_UserTag, userTag))
             .FirstOrDefaultAsync();
 
         if (currentUser == null)
@@ -203,17 +203,43 @@ public class CampaignsController : ControllerBase
             return "Error: Invalid player tag";
         }
 
+
         if (campaignData != null && currentUser != null)  
         {
-            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq("campaign._id", ObjectId.Parse(campaignID));
+            Console.WriteLine("Current Campaign: " + campaignData.name);
+            Console.WriteLine("Current User: " + currentUser.qh_UserTag);
+            Console.WriteLine("Payload Tag: " + userTag + " Payload Campaign: " + campaignID);
 
-            List<string> invitedPlayers = new List<string>(campaignData.campaign.invitedPlayersID);
-            invitedPlayers.Add(currentUser.qh_UserTag);
+            FilterDefinition<User> userFilterDef = Builders<User>.Filter.Eq(user => user.qh_UserTag, userTag);
+            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq(c => c.campaign.id, campaignID);
+
+            List<string> invitedPlayers = new List<string>();
+            List<string> invitedCampaigns = new List<string>();
+
+
+            if (campaignData.campaign.invitedPlayersID != null) 
+            {
+                if (campaignData.campaign.invitedPlayersID.Contains(currentUser.id))
+                    return "Player already Invited";
+
+                invitedPlayers = new List<string>(campaignData.campaign.invitedPlayersID);
+            }
+
+            if (currentUser.invitedCampaignsID != null)
+            {
+                invitedCampaigns = new List<string>(currentUser.invitedCampaignsID);
+            }
+
+            invitedCampaigns.Add(campaignData.campaign.id);
+            invitedPlayers.Add(currentUser.id);
 
             campaignData.campaign.invitedPlayersID = invitedPlayers.ToArray();
+            currentUser.invitedCampaignsID = invitedCampaigns.ToArray();
 
-            var updateDefinition = Builders<CampaignData>.Update.Set("campaign", campaignData);
+            var userUpdateDef = Builders<User>.Update.Set(u => u.invitedCampaignsID, currentUser.invitedCampaignsID);
+            var updateDefinition = Builders<CampaignData>.Update.Set(c => c.campaign, campaignData.campaign);
 
+            await usersCollection.UpdateOneAsync(userFilterDef, userUpdateDef);
             var update = await campaignsCollection.UpdateOneAsync(filterDefinition, updateDefinition);
 
             return "Success: Player Invitation send";
@@ -224,7 +250,7 @@ public class CampaignsController : ControllerBase
         }
     }
 
-    [HttpPost("AddPlayerToCampaign")]
+    [HttpPatch("AddPlayerToCampaign")]
     public async Task<string> AddPlayerToCampaign()
     {
         var database = client.GetDatabase(databaseName);
@@ -258,23 +284,46 @@ public class CampaignsController : ControllerBase
 
         if (campaignData != null && currentUser != null)
         {
-            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq("campaign._id", ObjectId.Parse(campaignID));
+            FilterDefinition<User> userFilterDef = Builders<User>.Filter.Eq(user => user.qh_UserTag, userTag);
+            FilterDefinition<CampaignData> filterDefinition = Builders<CampaignData>.Filter.Eq(c=> c.campaign.id, campaignID);
 
             List<string> invitedPlayers = new List<string>(campaignData.campaign.invitedPlayersID);
-            List<string> enrolledPlayers = new List<string>(campaignData.campaign.enrolledPlayersID);
+            List<string> enrolledPlayers = new List<string>();
 
-            invitedPlayers.Remove(userTag);
-            enrolledPlayers.Add(userTag);
+            if (campaignData.campaign.enrolledPlayersID != null) 
+            {
+                enrolledPlayers = new List<string>(campaignData.campaign.enrolledPlayersID);
+            }
+
+            invitedPlayers.Remove(currentUser.id);
+            enrolledPlayers.Add(currentUser.id);
 
 
             campaignData.campaign.invitedPlayersID = invitedPlayers.ToArray();
             campaignData.campaign.enrolledPlayersID = enrolledPlayers.ToArray();
 
-            var updateDefinition = Builders<CampaignData>.Update.Set("campaign", campaignData);
+            List<string> invitedCampaigns = new List<string>(currentUser.invitedCampaignsID);
+            List<string> enrolledCampaigns = new List<string>();
+
+
+            if (currentUser.enrolledCampaignsID != null)
+            {
+                enrolledCampaigns = new List<string>(currentUser.enrolledCampaignsID);
+            }
+
+            invitedCampaigns.Remove(campaignData.campaign.id);
+            enrolledCampaigns.Add(campaignData.campaign.id);
+
+            currentUser.invitedCampaignsID = invitedCampaigns.ToArray();
+            currentUser.enrolledCampaignsID = enrolledCampaigns.ToArray();
+
+            var userUpdateDef = Builders<User>.Update.Set(u => u.enrolledCampaignsID, currentUser.enrolledCampaignsID).Set(u => u.invitedCampaignsID, currentUser.invitedCampaignsID);
+            var updateDefinition = Builders<CampaignData>.Update.Set(c=> c.campaign , campaignData.campaign);
 
             var update = await campaignsCollection.UpdateOneAsync(filterDefinition, updateDefinition);
+            await usersCollection.UpdateOneAsync(userFilterDef, userUpdateDef);
 
-            return "Success: Player added";
+            return "Success: invitation accepted";
 
         }
         else
