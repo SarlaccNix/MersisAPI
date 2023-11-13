@@ -81,7 +81,8 @@ public class CharacterSheetController : ControllerBase
 
         var sheetTemplate = Builders<CharacterSheetsTemplateModel>.Filter.Eq("id", sheetsTemplateModel.id);
         var updateDefinition = Builders<CharacterSheetsTemplateModel>.Update
-            .Set("character_Sheet_Template", sheetsTemplateModel.characterSheetTemplate);
+            .Set(s => s.characterSheetTemplate, sheetsTemplateModel.characterSheetTemplate)
+            .Set(s => s.lastUpdate, sheetsTemplateModel.lastUpdate);
 
         try
         {
@@ -154,9 +155,17 @@ public class CharacterSheetController : ControllerBase
 
         sheetData.lastUpdate = DateTime.Now;
 
+        if (string.IsNullOrEmpty(sheetData.characterID))
+            sheetData.characterID = "";
+
+
         var sheetTemplate = Builders<CharacterSheetData>.Filter.Eq("id", sheetData.id);
         var updateDefinition = Builders<CharacterSheetData>.Update
-            .Set("character_Sheet_User_Data", sheetData.characterSheetUserData);
+            .Set(s => s.characterSheetUserData, sheetData.characterSheetUserData)
+            .Set(s => s.lastUpdate, sheetData.lastUpdate)
+            .Set(s => s.characterID, sheetData.characterID)
+            .Set(s => s.characterSheetTemplateID, sheetData.characterSheetTemplateID);
+
 
         try
         {

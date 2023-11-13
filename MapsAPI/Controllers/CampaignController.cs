@@ -171,6 +171,94 @@ public class CampaignsController : ControllerBase
         return error;
     }
 
+    [HttpPost("searchEnrolledInvitedCampaigns")]
+    public async Task<Object> SearchCampaignsEnrolled()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
+        var usersCollection = database.GetCollection<User>("Users");
+        object response;
+        object error = new
+        {
+            Error = "Error, no match found using the current searching criteria"
+        };
+
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+        String userID = payloadData.id;
+        int Page = payloadData.Page;
+        int Pagination = payloadData.Pagination;
+        bool searchInvitation = payloadData.SearchInvitation;
+        int currentPage = 1, currentPagination = 10;
+
+        if (payloadData.Pagination != null)
+        {
+            currentPagination = payloadData.Pagination == 0 ? 10 : payloadData.Pagination;
+        }
+
+        if (payloadData.Page != null)
+        {
+            currentPage = payloadData?.Page == 0 ? 1 : payloadData.Page;
+        }
+
+        var filter = builder.Empty;
+
+        if (payloadData.SearchInvitation != null)
+        {
+            if (payloadData.SearchInvitation)
+                filter = builder.ElemMatch(c => c.campaign.invitedPlayersID, userID);
+            else
+                filter = builder.ElemMatch(c => c.campaign.enrolledPlayersID, userID);
+        }
+
+        var campaignResults = await campaignsCollection.Find(filter).Skip((currentPage - 1) * currentPagination)
+            .Limit(currentPagination).ToListAsync();
+
+        if (campaignResults != null)
+        {
+            foreach (CampaignData campaign in campaignResults)
+            {
+                searchedCampaigns.Add(new CampaignData()
+                {
+                    id = campaign.id,
+                    creatorId = campaign.creatorId,
+                    name = campaign.name,
+                    creation_Date_Time = campaign.creation_Date_Time,
+                    last_Edited_Date_Time = campaign.last_Edited_Date_Time,
+                    campaign = campaign.campaign,
+                });
+            }
+        }
+
+        if (campaignResults != null && campaignResults.Any())
+        {
+            return response = new
+            {
+                // characters found on search
+                campaign = searchedCampaigns,
+                // Amount of characters in the current page
+                Count = campaignResults.Count,
+                // Selected page number
+                Page = currentPage,
+                // Selected amount of items per page
+                Pagination = currentPagination,
+                // Amount of matches for current search
+                Hits = await campaignsCollection.Find(filter).CountDocumentsAsync(),
+            };
+        }
+
+
+        return error;
+
+    }
+
+
     [HttpPatch("InvitePlayerToCampaign")]
     public async Task<string> InvitePlayerToCampaign()
     {
@@ -216,6 +304,11 @@ public class CampaignsController : ControllerBase
             List<string> invitedPlayers = new List<string>();
             List<string> invitedCampaigns = new List<string>();
 
+            if(campaignData.campaign.enrolledPlayersID != null) 
+            {
+                if (campaignData.campaign.enrolledPlayersID.Contains(currentUser.id))
+                    return "Player is already enrolled in this campaign";
+            }
 
             if (campaignData.campaign.invitedPlayersID != null) 
             {

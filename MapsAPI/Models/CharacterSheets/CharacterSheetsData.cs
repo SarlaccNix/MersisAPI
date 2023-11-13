@@ -12,6 +12,8 @@ public class CharacterSheetData
     [BsonElement("name")] public string name { get; set; }
     [BsonElement("last_Update")] public DateTime lastUpdate { get; set; }
     [BsonElement("creation_Date")] public DateTime creationDate { get; set; }
+
+    [BsonElement("character_ID")] public string characterID { get; set;}
     [BsonElement("creator_ID")] public string creatorID { get; set; }
     [BsonElement("character_Sheet_User_Data")] public byte[] characterSheetUserData { get; set; }
     [BsonElement("character_Sheet_Template_ID")] public string characterSheetTemplateID { get; set; }
