@@ -162,6 +162,7 @@ public class CharacterSheetController : ControllerBase
         var sheetTemplate = Builders<CharacterSheetData>.Filter.Eq("id", sheetData.id);
         var updateDefinition = Builders<CharacterSheetData>.Update
             .Set(s => s.characterSheetUserData, sheetData.characterSheetUserData)
+            .Set(s=> s.name, sheetData.name)
             .Set(s => s.lastUpdate, sheetData.lastUpdate)
             .Set(s => s.characterID, sheetData.characterID)
             .Set(s => s.characterSheetTemplateID, sheetData.characterSheetTemplateID);
@@ -216,6 +217,7 @@ public class CharacterSheetController : ControllerBase
                 id = sheet.id,
                 name = sheet.name,
                 character_Sheet_Template = sheet.characterSheetTemplate,
+                creatorID = sheet.creatorID,
                 creation_Date = sheet.creationDate,
                 last_Update = sheet.lastUpdate
             };
@@ -261,7 +263,7 @@ public class CharacterSheetController : ControllerBase
 
         if (!string.IsNullOrEmpty(creatorId))
         {
-            filter = Builders<CharacterSheetData>.Filter.Regex("creatorId", new(creatorId, "i"));
+            filter = Builders<CharacterSheetData>.Filter.Regex(c => c.creatorID, new(creatorId, "i"));
         }
 
         List<CharacterSheetData> SheetDataResult = await sheetTemplateCollection.Find(filter).Skip((currentPage - 1) * currentPagination)
