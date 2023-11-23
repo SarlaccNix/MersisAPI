@@ -126,22 +126,24 @@ public class XYZ
 
 public class CharacterData
 {
-    [BsonId] [BsonRepresentation(BsonType.ObjectId)] public string id { get; set; }
+    [BsonId][BsonRepresentation(BsonType.ObjectId)] public string id { get; set; }
 
     [BsonRepresentation(BsonType.ObjectId)] public string parentCharacterId { get; set; }
-    
+
     [BsonElement("character")] public Character Character { get; set; }
 
-    [BsonElement("characterName")] public string name {get; set;}
+    [BsonElement("characterName")] public string name { get; set; }
     [BsonElement("creatorId")] public string CreatorId { get; set; }
-    
+
     [BsonElement("creatorName")] public string CreatorName { get; set; }
     [BsonElement("downloaded_qty")] public int Downloads_Quantity { get; set; }
     [BsonElement("creation_Date_Time")] public DateTime? Creation_Date_Time { get; set; }
     [BsonElement("last_Edited_Date_Time")] public DateTime? Last_Edited_Date_Time { get; set; }
-    
+
     [BsonElement("likes")] public int Likes { get; set; }
-    
-    [BsonElement("privacy")] public  bool privacy { get; set; }
+
+    [BsonElement("privacy")] public bool privacy { get; set; }
     [BsonElement("tags")] public List<string> tags { get; set; }
+    [BsonElement("figure_Preview_Image")] public byte[] figurePreviewImage { get; set; }
+    [BsonElement("character_Sheet_Data_ID")] public string characterSheetDataID { get; set; }
 }

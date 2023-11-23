@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
+using MapsAPI.CharacterSheets;
 
 namespace MapsAPI.Controllers;
 
@@ -25,7 +26,6 @@ public class CharactersController : ControllerBase
     [HttpPost("characters")]
     public string newCharacter()
     {
-        
         var database = client.GetDatabase(databaseName);
         var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
         var payload = String.Empty;
@@ -37,11 +37,12 @@ public class CharactersController : ControllerBase
         if (characterData == null)
         {
             return "Error: missing JSON data";
-        } 
+        }
         characterData.name = characterData.Character.figureName;
         characterData.Creation_Date_Time = DateTime.Now;
         characterData.Last_Edited_Date_Time = DateTime.Now;
         characterData.parentCharacterId = !string.IsNullOrEmpty(characterData.parentCharacterId) ? characterData.parentCharacterId : null;
+
         try
         {
             charactersCollection.InsertOne(characterData);
@@ -72,12 +73,13 @@ public class CharactersController : ControllerBase
             return "Error: missing JSON data";
         }
         characterData.name = characterData.Character.figureName;
-        characterData.Creation_Date_Time = DateTime.Now;
         characterData.Last_Edited_Date_Time = DateTime.Now;
         characterData.parentCharacterId = !string.IsNullOrEmpty(characterData.parentCharacterId) ? characterData.parentCharacterId : null;
         var character = Builders<CharacterData>.Filter.Eq("id", characterData.id);
         var updateDefinition = Builders<CharacterData>.Update
-            .Set("character", characterData.Character);
+            .Set("character", characterData.Character)
+            .Set(c=> c.figurePreviewImage, characterData.figurePreviewImage)
+            .Set(c=> c.Last_Edited_Date_Time, characterData.Last_Edited_Date_Time);
         try
         {
            var update =  await charactersCollection.UpdateOneAsync(character, updateDefinition);
@@ -117,7 +119,7 @@ public class CharactersController : ControllerBase
         }
         else
         {
-            
+
             response = new
             {
                 id = character.id,
@@ -128,7 +130,9 @@ public class CharactersController : ControllerBase
                 tags = character.tags,
                 downloads_quantity = character.Downloads_Quantity,
                 creation_Date_Time = character.Creation_Date_Time,
-                last_Edited_Date_Time = character.Last_Edited_Date_Time
+                last_Edited_Date_Time = character.Last_Edited_Date_Time,
+                figurePreviewImage = character.figurePreviewImage,
+                characterSheetDataID= character.characterSheetDataID
             };
         }
         return new OkObjectResult(response);
@@ -212,7 +216,9 @@ public class CharactersController : ControllerBase
                     Downloads_Quantity = character.Downloads_Quantity,
                     Creation_Date_Time = character.Creation_Date_Time,
                     Last_Edited_Date_Time = character.Last_Edited_Date_Time,
-                    Character = character.Character
+                    Character = character.Character,
+                    figurePreviewImage = character.figurePreviewImage,
+                    characterSheetDataID = character.characterSheetDataID
                 });
             }
         }
