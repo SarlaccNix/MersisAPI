@@ -6,6 +6,7 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
 using MapsAPI.CharacterSheets;
+using MapsAPI.Models;
 
 namespace MapsAPI.Controllers;
 
@@ -284,6 +285,95 @@ public class CharacterSheetController : ControllerBase
                 Pagination = currentPagination,
                 // Amount of matches for current search
                 Hits = await sheetTemplateCollection.Find(filter).CountDocumentsAsync(),
+            };
+        }
+
+        return error;
+    }
+
+    [HttpPost("SearchSheetTemplates")]
+    public async Task<Object> SearchMaps()
+    {
+        var database = client.GetDatabase(databaseName);
+        var characterSheetTemplateCollection = database.GetCollection<CharacterSheetsTemplateModel>("QH_CharacterSheetsTemplates");
+        var payload = String.Empty;
+        object response;
+        object error = new
+        {
+            Error = "Error, no match found using the current searching criteria"
+        };
+
+        FilterDefinitionBuilder<CharacterSheetsTemplateModel> builder = Builders<CharacterSheetsTemplateModel>.Filter;
+        var filter = builder.Empty;
+        List<CharacterSheetsTemplateModel> sheetTemplatesResults = null;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
+        string searchText = payloadJson.SearchText;
+        string userId = payloadJson.creatorId;
+        var find = characterSheetTemplateCollection.Find(filter);
+        int currentPage = 1, currentPagination = 10;
+
+        if (payloadJson.Pagination != null)
+        {
+            currentPagination = payloadJson.Pagination == 0 ? 10 : payloadJson.Pagination;
+        }
+
+        if (payloadJson.Page != null)
+        {
+            currentPage = payloadJson?.Page == 0 ? 1 : payloadJson.Page;
+        }
+
+        if (!string.IsNullOrEmpty(searchText))
+        {
+            var searchTextFilter = builder.Regex("name", new BsonRegularExpression(searchText, "i"));
+            filter &= searchTextFilter;
+        }
+
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            var userFilter = builder.Regex("creator_ID", new(userId, "i"));
+            filter &= userFilter;
+        }
+
+        sheetTemplatesResults = await characterSheetTemplateCollection.Find(filter).Skip((currentPage - 1) * currentPagination).Limit(currentPagination).Sort("{last_Edited_Date_Time: -1}").ToListAsync();
+        var searchedSheetTemplates = new List<SearchSheetTemplate>();
+
+        if (sheetTemplatesResults != null)
+        {
+            foreach (CharacterSheetsTemplateModel SheetTemplate in sheetTemplatesResults)
+            {
+                searchedSheetTemplates.Add(new SearchSheetTemplate()
+                {
+                        id = SheetTemplate.id,
+                        name = SheetTemplate.name,
+                        lastUpdate = SheetTemplate.lastUpdate,
+                        creationDate = SheetTemplate.creationDate,
+                        creatorID = SheetTemplate.creatorID,
+                });
+            }
+        }
+
+        // return new OkObjectResult(wrappedMapResults);
+        if (sheetTemplatesResults != null && sheetTemplatesResults.Any())
+        {
+            return response = new
+            {
+                // maps found on search
+                characterSheetTemplates = searchedSheetTemplates,
+                // Amount of maps in the current page
+                Count = sheetTemplatesResults.Count,
+                // Selected page number
+                Page = currentPage,
+                // Selected amount of items per page
+                Pagination = currentPagination,
+                // Amount of matches for current search
+                hits = await characterSheetTemplateCollection.Find(filter).CountDocumentsAsync(),
             };
         }
 
