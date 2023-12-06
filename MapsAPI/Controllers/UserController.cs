@@ -297,4 +297,31 @@ public class UserController : ControllerBase
 
         return new OkObjectResult(idNotFound);
     }
+
+    [HttpPost("FetchUserName")]
+    public async Task<string> GetUserName()
+    {
+        var database = client.GetDatabase(databaseName);
+        var usersCollection = database.GetCollection<User>("Users");
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+        var userID = JsonConvert.DeserializeObject<dynamic>(payload);
+
+        FilterDefinition<User> filter = Builders<User>.Filter.Eq("_id", userID);
+
+        var user = await usersCollection.Find(filter).FirstOrDefaultAsync();
+
+        if (user != null) 
+        { 
+            return user.username;
+        }else
+        {
+            return null;
+        }
+
+    }
 }
