@@ -380,4 +380,81 @@ public class CharacterSheetController : ControllerBase
         return error;
     }
 
+    [HttpDelete("DeleteSheetTemplate")]
+    public async Task<string> DeleteSheetTemplate()
+    {
+        var database = client.GetDatabase(databaseName);
+        var characterSheetTemplateCollection = database.GetCollection<CharacterSheetsTemplateModel>("QH_CharacterSheetsTemplates");
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+        var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
+        string id = payloadJson.ID;
+
+        var filter = Builders<CharacterSheetsTemplateModel>.Filter.Eq(s => s.id, id);
+        var sheetTemplate = await characterSheetTemplateCollection.Find(filter).FirstOrDefaultAsync();
+
+        if (sheetTemplate != null) 
+        {
+            characterSheetTemplateCollection.DeleteOne(filter);
+            return sheetTemplate.name + " successfully deleted";
+        }else
+        {
+            return "Error: This template doesn't exist in DB";
+        }
+    }
+
+    [HttpDelete("DeleteSheetUserData")]
+    public async Task<string> DeleteSheetUserData()
+    {
+        var database = client.GetDatabase(databaseName);
+        var characterSheetDataCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheetsData");
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+        var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
+        string id = payloadJson.ID;
+
+        var filter = Builders<CharacterSheetData>.Filter.Eq(s => s.id, id);
+        var sheetData = await characterSheetDataCollection.Find(filter).FirstOrDefaultAsync();
+
+        if (sheetData != null)
+        {
+            characterSheetDataCollection.DeleteOne(filter);
+            return sheetData.name + " successfully deleted";
+        }
+        else
+        {
+            return "Error: This sheet Data doesn't exist in DB";
+        }
+    }
+
+    [HttpDelete("DeleteAllSheetsUserData")]
+    public async Task<string> DeleteAllSheetsUserData()
+    {
+        var database = client.GetDatabase(databaseName);
+        var characterSheetDataCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheetsData");
+
+        var result = await characterSheetDataCollection.DeleteManyAsync(Builders<CharacterSheetData>.Filter.Empty);
+
+        return "All Character Sheets Data deleted from collection. " + result.DeletedCount + " sheets deleted from collection.";
+    }
+
+    [HttpDelete("DeleteAllSheetTemplates")]
+    public async Task<string> DeleteAllSheetTemplates()
+    {
+        var database = client.GetDatabase(databaseName);
+        var characterSheetTemplateCollection = database.GetCollection<CharacterSheetsTemplateModel>("QH_CharacterSheetsTemplates");
+
+        var result = await characterSheetTemplateCollection.DeleteManyAsync(Builders<CharacterSheetsTemplateModel>.Filter.Empty);
+         
+        return "All Character Sheets Templates deleted from collection. " + result.DeletedCount + " templates deleted from collection.";
+    }
+
 }
