@@ -309,9 +309,9 @@ public class UserController : ControllerBase
         {
             payload = reader.ReadToEndAsync().Result;
         }
-        var userID = JsonConvert.DeserializeObject<dynamic>(payload);
+        var id = JsonConvert.DeserializeObject<dynamic>(payload);
 
-        FilterDefinition<User> filter = Builders<User>.Filter.Eq("_id", userID);
+        FilterDefinition<User> filter = Builders<User>.Filter.Eq("_id", id);
 
         var user = await usersCollection.Find(filter).FirstOrDefaultAsync();
 
