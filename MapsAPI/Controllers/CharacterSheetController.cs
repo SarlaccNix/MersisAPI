@@ -226,6 +226,53 @@ public class CharacterSheetController : ControllerBase
         return new OkObjectResult(response);
     }
 
+    [HttpPost("getCharacterSheetDataById")]
+    public async Task<OkObjectResult> getCharacterSheetUser()
+    {
+        //Se definen variables y se recibe la data llamado al endpoint
+        var payload = String.Empty;
+        object? response;
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadData = JsonConvert.DeserializeObject<dynamic>(payload);
+        String id = payloadData.id;
+        //Aqui se conecta al indice de la base de datos correspondiente
+        var database = client.GetDatabase(databaseName);
+        var sheetsDataCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheetsData");
+        //Aqui se busca en la base datos la data que se requiere
+        var sheetData = await sheetsDataCollection
+            .Find(Builders<CharacterSheetData>.Filter.Eq("_id", ObjectId.Parse(id)))
+            .FirstOrDefaultAsync();
+
+        if (sheetData == null)
+        {
+            response = new
+            {
+                error = "ID does not match any file in the database."
+            };
+        }
+        else
+        {
+            //Aqui se arma la respuesta que se le devuelve al juego
+            response = new
+            {
+                id = sheetData.id,
+                name = sheetData.name,
+                characterSheetTemplateID = sheetData.characterSheetTemplateID,
+                characterSheetUserData = sheetData.characterSheetUserData,
+                creatorID = sheetData.creatorID,
+                characterID = sheetData.characterID,
+                creation_Date = sheetData.creationDate,
+                last_Update = sheetData.lastUpdate
+            };
+        }
+        return new OkObjectResult(response);
+    }
+
+
     [HttpPost("searchCharacterSheetsByUserID")]
     public async Task<Object> SearchCharacterSheetsByUserID()
     {
