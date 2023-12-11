@@ -77,9 +77,10 @@ public class CharactersController : ControllerBase
         characterData.parentCharacterId = !string.IsNullOrEmpty(characterData.parentCharacterId) ? characterData.parentCharacterId : null;
         var character = Builders<CharacterData>.Filter.Eq("id", characterData.id);
         var updateDefinition = Builders<CharacterData>.Update
-            .Set("character", characterData.Character)
+            .Set(c=> c.Character, characterData.Character)
             .Set(c=> c.figurePreviewImage, characterData.figurePreviewImage)
-            .Set(c=> c.Last_Edited_Date_Time, characterData.Last_Edited_Date_Time);
+            .Set(c=> c.Last_Edited_Date_Time, characterData.Last_Edited_Date_Time)
+            .Set(c=> c.tags, characterData.tags);
         try
         {
            var update =  await charactersCollection.UpdateOneAsync(character, updateDefinition);
@@ -285,5 +286,77 @@ public class CharactersController : ControllerBase
         var mapsCollection = database.GetCollection<Character>("QH_Characters");
         var update = Builders<Character>.Update.Rename("favorites", "likes");
         mapsCollection.UpdateMany(new BsonDocument(), update);
+    }
+
+    [HttpPatch("UpdateFigurePicture")]
+    public async Task<string> UpdateFigurePicture()
+    {
+        var database = client.GetDatabase(databaseName);
+        var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
+        var payload = String.Empty;
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var characterData = JsonConvert.DeserializeObject<CharacterData>(payload);
+
+        if (characterData == null)
+        {
+            return "Error: missing JSON data";
+        }
+
+        var character = Builders<CharacterData>.Filter.Eq(c=> c.id, characterData.id);
+        var updateDefinition = Builders<CharacterData>.Update
+            .Set(c=> c.figurePreviewImage, characterData.figurePreviewImage);
+           
+
+        try
+        {
+            var update = await charactersCollection.UpdateOneAsync(character, updateDefinition);
+            return "Character Picture Updated";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error: " + e);
+            return "Error: " + e;
+        }
+    }
+
+    [HttpPost("GetPicture")]
+    public async Task<OkObjectResult> GetPicture()
+    {
+        var payload = String.Empty;
+        object? response;
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadData = JsonConvert.DeserializeObject<CharacterData>(payload);
+
+        var database = client.GetDatabase(databaseName);
+        var charactersCollection = database.GetCollection<CharacterData>("QH_Characters");
+
+        var character = await charactersCollection
+            .Find(Builders<CharacterData>.Filter.Eq("_id", ObjectId.Parse(payloadData.id)))
+            .FirstOrDefaultAsync();
+
+        if (character == null)
+        {
+            response = new
+            {
+                error = "ID does not match any file in the database."
+            };
+        }
+        else
+        {
+
+            response = new
+            {
+                figurePreviewImage = character.figurePreviewImage,
+            };
+        }
+        return new OkObjectResult(response);
     }
 }
