@@ -508,7 +508,6 @@ public class CharacterSheetController : ControllerBase
     [HttpPost("TestRequest")]
     public async Task<string> TestString()
     {
-        await Task.Delay(5000);
         return "This is a test string...";
     }
 
