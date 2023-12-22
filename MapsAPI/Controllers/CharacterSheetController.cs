@@ -504,4 +504,13 @@ public class CharacterSheetController : ControllerBase
         return "All Character Sheets Templates deleted from collection. " + result.DeletedCount + " templates deleted from collection.";
     }
 
+
+    [HttpPost("TestRequest")]
+    public async Task<string> TestString()
+    {
+        await Task.Delay(5000);
+        return "This is a test string...";
+    }
+
+
 }
