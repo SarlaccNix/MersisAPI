@@ -324,4 +324,39 @@ public class UserController : ControllerBase
         }
 
     }
+
+    [HttpPost("FetchUserWithUserTag")]
+    public async Task<OkObjectResult> GetUserInfoWithUserTag()
+    {
+        var database = client.GetDatabase(databaseName);
+        var usersCollection = database.GetCollection<User>("Users");
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var serverUser = JsonConvert.DeserializeObject<User>(payload);
+        FilterDefinition<User> filter = Builders<User>.Filter.Eq(user => user.qh_UserTag, serverUser.qh_UserTag);
+
+        var user = await usersCollection.Find(filter).FirstOrDefaultAsync();
+
+        if (user != null)
+        {
+            var ServerUserData = new
+            {
+                username = user.username,
+                profilePicIndex = user.profilePicIndex,
+                qh_UserTag = user.qh_UserTag,
+                id = user.id
+            };
+
+            return new OkObjectResult(ServerUserData);
+        }
+        else
+            return null;
+
+
+    }
 }
