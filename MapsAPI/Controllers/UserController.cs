@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using Newtonsoft.Json;
 using Models.Users;
+using System.Text;
 
 [ApiController]
 [Route("[controller]")]
@@ -356,7 +357,33 @@ public class UserController : ControllerBase
         }
         else
             return null;
+    }
 
+    [HttpPost("FetchUsersWithUsersID")]
+    public async Task<User[]> GetUsersInfoWithUserID()
+    {
+        var database = client.GetDatabase(databaseName);
+        var usersCollection = database.GetCollection<User>("Users");
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        
+        var UsersIDsArray = JsonConvert.DeserializeObject<string[]>(payload);
+
+        if(UsersIDsArray != null) 
+        {
+            var filter = Builders<User>.Filter.In(u => u.id, UsersIDsArray);
+            var users = await usersCollection.Find(filter).ToListAsync();
+            return users.ToArray();
+        }
+        else
+        {
+            return null;
+        }
 
     }
 }

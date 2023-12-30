@@ -23,7 +23,7 @@ public class CampaignsController : ControllerBase
             "mongodb+srv://doadmin:fuzs536H0R9P124y@db-mongodb-nyc1-91572-de834d8c.mongo.ondigitalocean.com/admin?tls=true&authSource=admin");
 
     [HttpPost("campaigns")]
-    public string NewCampaign()
+    public async Task<string> NewCampaign()
     {
 
         var database = client.GetDatabase(databaseName);
@@ -44,12 +44,18 @@ public class CampaignsController : ControllerBase
             return "Error: Json missing.";
         }
 
-        if(campaignData.invitedPlayersID != null && campaignData.invitedPlayersID.Any()) 
+        var campaignCreatorFilter = Builders<User>.Filter.Eq(u => u.id, campaignData.creatorId);
+        var campaignCreatorUpdateDef = Builders<User>.Update.Push(u => u.enrolledCampaignsID, campaignData.id);
+        await usersCollection.UpdateOneAsync(campaignCreatorFilter, campaignCreatorUpdateDef);
+
+
+
+        if (campaignData.invitedPlayersID != null && campaignData.invitedPlayersID.Any()) 
         {
             var userFilter = Builders<User>.Filter.In(u => u.id, campaignData.invitedPlayersID);
 
             var UpdateDefinition = Builders<User>.Update.Push(u => u.invitedCampaignsID, campaignData.id);
-            usersCollection.UpdateMany(userFilter, UpdateDefinition);
+            await usersCollection.UpdateManyAsync(userFilter, UpdateDefinition);
         }
 
 
@@ -227,7 +233,7 @@ public class CampaignsController : ControllerBase
 
         if (user != null)
         {
-            if (user.invitedCampaignsID != null) 
+            if (user.invitedCampaignsID != null || user.enrolledCampaignsID != null) 
             {
                 string[] campaignIDs;
 
@@ -447,5 +453,106 @@ public class CampaignsController : ControllerBase
             return "Error: No campaign found.";
         }
     }
+
+    [HttpPatch("DeclineInvitation")]
+    public async Task<string> DeclineInvitation()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
+        var usersCollection = database.GetCollection<User>("Users");
+
+
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var campaign = JsonConvert.DeserializeObject<CampaignData>(payload);
+
+
+        if (campaign != null)
+        {
+            var filter = Builders<CampaignData>.Filter.Eq(c => c.id, campaign.id);
+            var userFilter = Builders<User>.Filter.Eq(u => u.id, campaign.creatorId);
+
+            var updateDef = Builders<CampaignData>.Update.Pull(c=> c.invitedPlayersID, campaign.creatorId);
+            var userUpdateDef = Builders<User>.Update.Pull(u => u.invitedCampaignsID, campaign.id);
+
+            await campaignsCollection.UpdateOneAsync(filter, updateDef);
+            await usersCollection.UpdateOneAsync(userFilter, userUpdateDef);
+
+            return "Invitation Declined";
+        }
+        else
+            return "Error: campaign Empty";
+    }
+
+
+    [HttpPatch("UpdateCampaignDescription")]
+    public async Task<string> UpdateCampaignDescription()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
+
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var campaign = JsonConvert.DeserializeObject<CampaignData>(payload);
+
+
+        if (campaign != null) 
+        {
+            var filter = Builders<CampaignData>.Filter.Eq(c=> c.id, campaign.id);
+            var updateDef = Builders<CampaignData>.Update.Set(c=>c.description, campaign.description);
+
+            await campaignsCollection.UpdateOneAsync(filter, updateDef);
+
+            return "Description Updated";
+
+        }
+        else
+            return "Error: campaign Empty";
+    }
+
+    [HttpPatch("AbandonCampaign")]
+    public async Task<string> AbandonCampaign()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
+        var usersCollection = database.GetCollection<User>("Users");
+
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var campaign = JsonConvert.DeserializeObject<CampaignData>(payload);
+
+
+        if (campaign != null)
+        {
+            var campaignFilter = Builders<CampaignData>.Filter.Eq(c => c.id, campaign.id);
+            var userFilter = Builders<User>.Filter.Eq(u => u.id, campaign.creatorId);
+
+            var userUpdateDef = Builders<User>.Update.Pull(u => u.enrolledCampaignsID, campaign.id);
+            var campaignUpdateDef = Builders<CampaignData>.Update.Pull(c => c.enrolledPlayersID, campaign.creatorId);
+
+            await usersCollection.UpdateOneAsync(userFilter, userUpdateDef);
+            await campaignsCollection.UpdateOneAsync(campaignFilter, campaignUpdateDef);
+
+            return "You abandon the campaign";
+        }
+        else
+            return "Error: Json Empty";
+    }
+
 
 }
