@@ -66,7 +66,7 @@ public class CampaignsController : ControllerBase
         try
         {
             campaignsCollection.InsertOne(campaignData);
-            return "Campaign Created";
+            return "Success";
         }
         catch (Exception e)
         {
@@ -513,7 +513,7 @@ public class CampaignsController : ControllerBase
 
             await campaignsCollection.UpdateOneAsync(filter, updateDef);
 
-            return "Description Updated";
+            return "Success";
 
         }
         else
@@ -554,5 +554,48 @@ public class CampaignsController : ControllerBase
             return "Error: Json Empty";
     }
 
+    [HttpDelete("DeleteCampaign")]
+    public async Task<string> DeleteCampaign()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
+        var usersCollection = database.GetCollection<User>("Users");
 
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadData = JsonConvert.DeserializeObject<CampaignData>(payload);
+
+        if (payloadData?.id != null)
+        {
+            var campaignToDeleteFilter = Builders<CampaignData>.Filter.Eq(c => c.id, payloadData.id);
+            var campaignToDelete = await campaignsCollection.Find(campaignToDeleteFilter).FirstOrDefaultAsync();
+
+            if (campaignToDelete.creatorId == payloadData.creatorId && campaignToDelete != null) 
+            {
+                var usersInvitedFilter = Builders<User>.Filter.In(u => u.id, campaignToDelete.invitedPlayersID);
+                var usersEnrolledFilter = Builders<User>.Filter.In(u => u.id, campaignToDelete.enrolledPlayersID);
+
+                var updateDefInvited = Builders<User>.Update.Pull(u => u.invitedCampaignsID, campaignToDelete.id);
+                var updateDefEnrolled = Builders<User>.Update.Pull(u => u.enrolledCampaignsID, campaignToDelete.id);
+
+                await usersCollection.UpdateManyAsync(usersInvitedFilter, updateDefInvited);
+                await usersCollection.UpdateManyAsync(usersEnrolledFilter, updateDefEnrolled);
+
+                await campaignsCollection.DeleteOneAsync(campaignToDeleteFilter);
+
+                return "Success";
+            }
+            else
+            {
+                return "Error: You are not the owner of this campaign";
+            }
+        }
+        else
+            return "Error: Json Missing";
+    }
 }
