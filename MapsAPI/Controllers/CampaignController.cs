@@ -445,7 +445,7 @@ public class CampaignsController : ControllerBase
             var update = await campaignsCollection.UpdateOneAsync(filterDefinition, updateDefinition);
             await usersCollection.UpdateOneAsync(userFilterDef, userUpdateDef);
 
-            return "Success: invitation accepted";
+            return "Success";
 
         }
         else
@@ -483,7 +483,7 @@ public class CampaignsController : ControllerBase
             await campaignsCollection.UpdateOneAsync(filter, updateDef);
             await usersCollection.UpdateOneAsync(userFilter, userUpdateDef);
 
-            return "Invitation Declined";
+            return "Success";
         }
         else
             return "Error: campaign Empty";
