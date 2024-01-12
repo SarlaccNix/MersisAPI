@@ -366,7 +366,7 @@ public class CampaignsController : ControllerBase
             await usersCollection.UpdateOneAsync(userFilterDef, userUpdateDef);
             var update = await campaignsCollection.UpdateOneAsync(filterDefinition, updateDefinition);
 
-            return "Success: Player Invitation send";
+            return "Success";
 
         }else
         {
@@ -545,12 +545,12 @@ public class CampaignsController : ControllerBase
             var userFilter = Builders<User>.Filter.Eq(u => u.id, campaign.creatorId);
 
             var userUpdateDef = Builders<User>.Update.Pull(u => u.enrolledCampaignsID, campaign.id);
-            var campaignUpdateDef = Builders<CampaignData>.Update.Pull(c => c.enrolledPlayersID, campaign.creatorId);
+            var campaignUpdateDef = Builders<CampaignData>.Update.Pull(c => c.enrolledPlayersID, campaign.creatorId).Pull(c => c.dungeonMastersID, campaign.creatorId);
 
             await usersCollection.UpdateOneAsync(userFilter, userUpdateDef);
             await campaignsCollection.UpdateOneAsync(campaignFilter, campaignUpdateDef);
 
-            return "You abandon the campaign";
+            return "Success";
         }
         else
             return "Error: Json Empty";
