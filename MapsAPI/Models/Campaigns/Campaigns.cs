@@ -13,6 +13,7 @@ public class CampaignData
     [BsonElement("creatorName")] public string creatorName { get; set; }
     [BsonElement("creation_Date_Time")] public DateTime? creation_Date_Time { get; set; }
     [BsonElement("last_Edited_Date_Time")] public DateTime? last_Edited_Date_Time { get; set; }
+    [BsonElement("Dungeon_Masters")] public string[] dungeonMastersID {  get; set; }
     [BsonElement("enrolled_Players_ID")] public string[] enrolledPlayersID { get; set; }
     [BsonElement("invited_Players_ID")] public string[] invitedPlayersID { get; set; }
 

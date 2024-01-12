@@ -135,7 +135,7 @@ public class UserController : ControllerBase
         {
             Random randomizer = new Random();
             string tagValue = randomizer.Next(1000, 9999).ToString();
-            currentUser.qh_UserTag = userData.username + "#" + tagValue;
+            currentUser.qh_UserTag = userData.username.ToUpper() + "#" + tagValue;
             var update = Builders<User>.Update.Set("qh_UserTag", currentUser.qh_UserTag)
                 .Set("username", userData.username);
             var fetchUpdate = await usersCollection.UpdateOneAsync(filter, update);
@@ -153,8 +153,6 @@ public class UserController : ControllerBase
                 };
                 return new OkObjectResult(error);
             }
-
-
         }
 
         var updatedUser = new

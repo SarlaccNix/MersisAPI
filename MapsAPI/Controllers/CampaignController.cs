@@ -598,4 +598,37 @@ public class CampaignsController : ControllerBase
         else
             return "Error: Json Missing";
     }
+
+    [HttpPatch("DungeonMaster")]
+    public async Task<string> AscendToDungeonMaster()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<CampaignData>("QH_Campaigns");
+
+        var payload = String.Empty;
+
+        using (StreamReader reader = new StreamReader(Request.Body))
+        {
+            payload = reader.ReadToEndAsync().Result;
+        }
+
+        var payloadData = JsonConvert.DeserializeObject<CampaignData>(payload);
+
+        string campaignID = payloadData.id;
+        string playerToAscend = payloadData.creatorId;
+
+        if (campaignID != null && playerToAscend != null)
+        {
+            var campaignFilter = builder.Eq(c => c.id, campaignID);
+            var updateDef = Builders<CampaignData>.Update.Push(c => c.dungeonMastersID, playerToAscend);
+
+            await campaignsCollection.UpdateOneAsync(campaignFilter, updateDef);
+
+            return "Success";
+
+        }
+        else
+            return "Error: json is missing";
+
+    }
 }
