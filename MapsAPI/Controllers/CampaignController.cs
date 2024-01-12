@@ -263,6 +263,7 @@ public class CampaignsController : ControllerBase
                     description = campaign.description,
                     creation_Date_Time = campaign.creation_Date_Time,
                     last_Edited_Date_Time = campaign.last_Edited_Date_Time,
+                    dungeonMastersID = campaign.dungeonMastersID,
                     enrolledPlayersID = campaign.enrolledPlayersID,
                     invitedPlayersID = campaign.invitedPlayersID,
                 });
