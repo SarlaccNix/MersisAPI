@@ -482,26 +482,4 @@ public class CharacterSheetController : ControllerBase
         }
     }
 
-    [HttpDelete("DeleteAllSheetsUserData")]
-    public async Task<string> DeleteAllSheetsUserData()
-    {
-        var database = client.GetDatabase(databaseName);
-        var characterSheetDataCollection = database.GetCollection<CharacterSheetData>("QH_CharacterSheetsData");
-
-        var result = await characterSheetDataCollection.DeleteManyAsync(Builders<CharacterSheetData>.Filter.Empty);
-
-        return "All Character Sheets Data deleted from collection. " + result.DeletedCount + " sheets deleted from collection.";
-    }
-
-    [HttpDelete("DeleteAllSheetTemplates")]
-    public async Task<string> DeleteAllSheetTemplates()
-    {
-        var database = client.GetDatabase(databaseName);
-        var characterSheetTemplateCollection = database.GetCollection<CharacterSheetsTemplateModel>("QH_CharacterSheetsTemplates");
-
-        var result = await characterSheetTemplateCollection.DeleteManyAsync(Builders<CharacterSheetsTemplateModel>.Filter.Empty);
-         
-        return "All Character Sheets Templates deleted from collection. " + result.DeletedCount + " templates deleted from collection.";
-    }
-
 }
