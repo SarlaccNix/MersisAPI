@@ -439,7 +439,7 @@ public class CharacterSheetController : ControllerBase
             payload = reader.ReadToEndAsync().Result;
         }
         var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
-        string id = payloadJson.ID;
+        string id = payloadJson.id;
 
         var filter = Builders<CharacterSheetsTemplateModel>.Filter.Eq(s => s.id, id);
         var sheetTemplate = await characterSheetTemplateCollection.Find(filter).FirstOrDefaultAsync();
@@ -466,7 +466,7 @@ public class CharacterSheetController : ControllerBase
             payload = reader.ReadToEndAsync().Result;
         }
         var payloadJson = JsonConvert.DeserializeObject<dynamic>(payload);
-        string id = payloadJson.ID;
+        string id = payloadJson.id;
 
         var filter = Builders<CharacterSheetData>.Filter.Eq(s => s.id, id);
         var sheetData = await characterSheetDataCollection.Find(filter).FirstOrDefaultAsync();
