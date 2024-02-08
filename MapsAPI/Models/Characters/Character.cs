@@ -79,7 +79,9 @@ public class Character
     [BsonElement("backAttachment")] public string backAttachment { get; set; }
     
     [BsonElement("helmetAttachment")] public string helmetAttachment { get; set; }
-    
+    [BsonElement("wingAttachment")] public string wingAttachment { get; set; }
+    [BsonElement("tailAttachment")] public string tailAttachment { get; set; }
+
     [BsonElement("figureBase")] public string figureBase { get; set; }
     
     [BsonElement("idleAnimationController")] public string idleAnimationController { get; set; }
