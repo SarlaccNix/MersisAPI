@@ -633,4 +633,26 @@ public class CampaignsController : ControllerBase
             return "Error: json is missing";
 
     }
+
+    [HttpGet("BetaWeekend")]
+    public async Task<string> GetBetaWeekend()
+    {
+        var database = client.GetDatabase(databaseName);
+        var campaignsCollection = database.GetCollection<BsonDocument>("QH_Campaigns");
+
+        var filter = Builders<BsonDocument>.Filter.Eq("_id", new ObjectId("66060adcb7ceb1353462e20b"));
+
+        var document = await campaignsCollection.Find(filter).FirstOrDefaultAsync();
+
+        if(document != null) 
+        { 
+            if(document.Contains("BetaWeekend"))
+            {
+
+                return document["BetaWeekend"].AsString;
+            }
+        }
+
+        return "Error: Beta Weekend End";
+    }
 }
