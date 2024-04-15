@@ -181,7 +181,8 @@ public class MapsController : ControllerBase
             id = map.Id,
             mapName = map.MapName,
             version = map.MapVersion,
-            mapFile = map.MapFile
+            mapFile = map.MapFile,
+            mapPreview = map.MapPreview
         };
         return new OkObjectResult(mapResponse);
     }
