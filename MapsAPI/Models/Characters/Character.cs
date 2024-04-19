@@ -37,6 +37,7 @@ public class Character
     [BsonElement("face")] public string face { get; set; }
     
     [BsonElement("nose")] public string nose { get; set; }
+    [BsonElement("jaw")] public string jaw { get; set; }
     
     [BsonElement("helmet")] public string helmet { get; set; }
     
